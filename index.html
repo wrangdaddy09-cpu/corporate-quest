@@ -49,6 +49,29 @@
     margin: auto;
   }
 
+  /* Screen transition */
+  #screen-flash {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  #screen-flash.flash {
+    display: block;
+    animation: staticFlash 0.35s ease-out;
+  }
+
+  @keyframes staticFlash {
+    0% { background: rgba(200, 200, 255, 0.3); }
+    15% { background: rgba(0, 0, 0, 0.8); }
+    30% { background: rgba(150, 150, 200, 0.15); }
+    50% { background: rgba(0, 0, 0, 0.5); }
+    70% { background: rgba(100, 100, 150, 0.05); }
+    100% { background: transparent; }
+  }
+
   /* Floor progress indicator */
   #floor-indicator {
     display: flex;
@@ -114,6 +137,43 @@
     margin-bottom: 10px;
   }
 
+  /* Dialogue portrait */
+  .dialogue-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .portrait {
+    flex-shrink: 0;
+    font-size: 6px;
+    line-height: 1.2;
+    color: #9f9fcf;
+    white-space: pre;
+    background: #1a1a30;
+    border: 1px solid #3a3a5a;
+    border-radius: 4px;
+    padding: 6px;
+    text-align: center;
+    min-width: 70px;
+  }
+
+  .portrait .portrait-name {
+    display: block;
+    font-size: 6px;
+    color: #ffd700;
+    margin-top: 4px;
+    white-space: nowrap;
+  }
+
+  .dialogue-text {
+    font-size: 9px;
+    line-height: 1.9;
+    flex: 1;
+    padding-top: 2px;
+  }
+
   #choices {
     display: flex;
     flex-direction: column;
@@ -148,9 +208,7 @@
     color: #aaa;
   }
 
-  .stat-bar .label {
-    min-width: 90px;
-  }
+  .stat-bar .label { min-width: 90px; }
 
   .stat-bar .bar {
     flex: 1;
@@ -197,6 +255,15 @@
     50% { opacity: 1; }
   }
 
+  /* Confetti canvas */
+  #confetti-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 999;
+  }
+
   .scroll-reveal {
     background: linear-gradient(135deg, #2a1a0a, #1a1208);
     border: 3px solid #a08040;
@@ -229,6 +296,32 @@
     transform: translateY(0);
   }
 
+  /* Quest summary */
+  .quest-summary {
+    background: #1a1a30;
+    border: 2px solid #3a3a6a;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 24px;
+    text-align: center;
+  }
+
+  .quest-summary h3 {
+    color: #ffd700;
+    font-size: 10px;
+    margin-bottom: 16px;
+  }
+
+  .quest-summary .stat-line {
+    font-size: 8px;
+    line-height: 2.4;
+    color: #aac;
+  }
+
+  .quest-summary .stat-line span {
+    color: #ffd700;
+  }
+
   .fade-in { animation: fadeIn 1.2s ease-in; }
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
@@ -243,6 +336,32 @@
   }
 
   .flavor { color: #888; font-style: italic; }
+
+  /* Name input */
+  #name-input {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 10px 14px;
+    background: #1a1a30;
+    color: #ffd700;
+    border: 2px solid #3a3a6a;
+    border-radius: 6px;
+    outline: none;
+    width: 100%;
+    max-width: 300px;
+    margin: 10px 0;
+    text-align: center;
+  }
+
+  #name-input:focus {
+    border-color: #ffd700;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+  }
+
+  .name-prompt {
+    text-align: center;
+    margin: 10px 0;
+  }
 
   /* Game Over overlay */
   #game-over {
@@ -298,34 +417,34 @@
   /* Mobile */
   @media (max-width: 600px) {
     body { padding: 10px 0; }
-
     #game { padding: 16px; border-radius: 8px; }
-
     #scene h2 { font-size: 9px; }
     #scene .art { font-size: 6px; }
     #scene p { font-size: 8px; line-height: 1.8; }
-
     #choices button { font-size: 7px; padding: 10px 12px; }
-
     .stat-bar { font-size: 6px; gap: 5px; }
     .stat-bar .label { min-width: 70px; }
-
     #floor-indicator { gap: 5px; }
     #floor-indicator .floor-dot { width: 20px; height: 5px; }
     #floor-label { font-size: 6px; }
-
     .scroll-reveal { padding: 16px; }
     .scroll-reveal h3 { font-size: 8px; }
     .scroll-reveal .letter-paragraph { font-size: 12px; line-height: 1.7; }
-
     #game-over h1 { font-size: 16px; }
     #game-over p { font-size: 8px; }
+    .portrait { min-width: 55px; font-size: 5px; padding: 4px; }
+    .portrait .portrait-name { font-size: 5px; }
+    .dialogue-text { font-size: 8px; }
+    .quest-summary .stat-line { font-size: 7px; }
+    #name-input { font-size: 8px; }
   }
 </style>
 </head>
 <body>
 
 <div class="stars" id="stars"></div>
+<div id="screen-flash"></div>
+<canvas id="confetti-canvas"></canvas>
 
 <div id="game-over">
   <h1>YOU HAVE DIED</h1>
@@ -362,14 +481,11 @@
 // ===================== AUDIO ENGINE =====================
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx;
-function ensureAudio() {
-  if (!audioCtx) audioCtx = new AudioCtx();
-}
+function ensureAudio() { if (!audioCtx) audioCtx = new AudioCtx(); }
 
 function playClick() {
   ensureAudio();
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);
   o.type = 'square';
   o.frequency.setValueAtTime(600, audioCtx.currentTime);
@@ -381,8 +497,7 @@ function playClick() {
 
 function playWrong() {
   ensureAudio();
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);
   o.type = 'sawtooth';
   o.frequency.setValueAtTime(250, audioCtx.currentTime);
@@ -394,13 +509,10 @@ function playWrong() {
 
 function playDeath() {
   ensureAudio();
-  const notes = [400, 350, 280, 200];
-  notes.forEach((freq, i) => {
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
+  [400, 350, 280, 200].forEach((freq, i) => {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
-    o.type = 'square';
-    o.frequency.value = freq;
+    o.type = 'square'; o.frequency.value = freq;
     g.gain.setValueAtTime(0.08, audioCtx.currentTime + i * 0.2);
     g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.2 + 0.2);
     o.start(audioCtx.currentTime + i * 0.2);
@@ -411,32 +523,117 @@ function playDeath() {
 function playFanfare() {
   ensureAudio();
   const melody = [523, 659, 784, 1047, 784, 1047];
-  const durations = [0.15, 0.15, 0.15, 0.3, 0.1, 0.5];
+  const dur = [0.15, 0.15, 0.15, 0.3, 0.1, 0.5];
   let t = audioCtx.currentTime;
   melody.forEach((freq, i) => {
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
-    o.type = 'square';
-    o.frequency.value = freq;
+    o.type = 'square'; o.frequency.value = freq;
     g.gain.setValueAtTime(0.07, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + durations[i]);
-    o.start(t);
-    o.stop(t + durations[i] + 0.05);
-    t += durations[i];
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur[i]);
+    o.start(t); o.stop(t + dur[i] + 0.05);
+    t += dur[i];
   });
 }
 
 function playTypeChar() {
   ensureAudio();
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);
-  o.type = 'square';
-  o.frequency.value = 800 + Math.random() * 200;
+  o.type = 'square'; o.frequency.value = 800 + Math.random() * 200;
   g.gain.setValueAtTime(0.015, audioCtx.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
   o.start(); o.stop(audioCtx.currentTime + 0.03);
+}
+
+function playTransition() {
+  ensureAudio();
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(100, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.15);
+  o.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+  g.gain.setValueAtTime(0.04, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+  o.start(); o.stop(audioCtx.currentTime + 0.35);
+}
+
+// ===================== SCREEN TRANSITION =====================
+function screenTransition(callback) {
+  playTransition();
+  const flash = document.getElementById('screen-flash');
+  flash.classList.remove('flash');
+  void flash.offsetWidth; // reflow
+  flash.classList.add('flash');
+  setTimeout(() => {
+    callback();
+    setTimeout(() => flash.classList.remove('flash'), 200);
+  }, 150);
+}
+
+// ===================== CONFETTI =====================
+let confettiPieces = [];
+let confettiRunning = false;
+const confettiCanvas = document.getElementById('confetti-canvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+
+function resizeConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConfetti);
+resizeConfetti();
+
+function startConfetti() {
+  const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#ff9ff3', '#54a0ff', '#5f27cd'];
+  for (let i = 0; i < 150; i++) {
+    confettiPieces.push({
+      x: Math.random() * confettiCanvas.width,
+      y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+      w: Math.random() * 8 + 4,
+      h: Math.random() * 6 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 3 + 1.5,
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 8,
+      opacity: 1
+    });
+  }
+  if (!confettiRunning) {
+    confettiRunning = true;
+    animateConfetti();
+  }
+}
+
+function animateConfetti() {
+  if (!confettiRunning) return;
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+  confettiPieces.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rot += p.rotSpeed;
+    p.vy += 0.03;
+    if (p.y > confettiCanvas.height) p.opacity -= 0.02;
+
+    confettiCtx.save();
+    confettiCtx.translate(p.x, p.y);
+    confettiCtx.rotate(p.rot * Math.PI / 180);
+    confettiCtx.globalAlpha = Math.max(0, p.opacity);
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    confettiCtx.restore();
+  });
+
+  confettiPieces = confettiPieces.filter(p => p.opacity > 0);
+  if (confettiPieces.length > 0) {
+    requestAnimationFrame(animateConfetti);
+  } else {
+    confettiRunning = false;
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  }
 }
 
 // ===================== STARS =====================
@@ -451,12 +648,33 @@ for (let i = 0; i < 80; i++) {
   starsEl.appendChild(s);
 }
 
+// ===================== PORTRAITS =====================
+const PORTRAITS = {
+  guard: { art: ' ___\n|o_o|\n|___|', name: 'GUARD' },
+  cameron: { art: ' ___\n|^_^|\n|~~~|', name: 'CAMERON' },
+  pm: { art: ' ___\n|>_<|\n|___|', name: 'PM' },
+  wizard: { art: ' /\\\\\n|o.o|\n|___|', name: 'IT WIZ' },
+  eagle: { art: ' /V\\\\\n(o o)\n \\~/', name: 'EAGLE' },
+  lisa: { art: ' ___\n|-_-|\n|___|', name: 'LISA' },
+};
+
 // ===================== GAME STATE =====================
 let willpower = 10, sanity = 10;
 const maxStat = 10;
 let currentFloor = 0;
-let pendingScene = null; // stores the scene to resume after death
-let typewriterAbort = null; // to cancel ongoing typewriter on skip
+let pendingScene = null;
+let typewriterAbort = null;
+let playerName = 'Traveler';
+
+// Tracking stats for quest summary
+let totalSanityLost = 0;
+let totalWillpowerLost = 0;
+let meetingsSurvived = 0;
+let deathCount = 0;
+let roomsVisited = 0;
+let cameronEncountered = false;
+let coffeeConsumed = false;
+let granolaEaten = false;
 
 const floorNames = ['LOBBY', 'STAIRWELL', 'BREAK ROOM', 'FLOOR 3', 'THE DEPTHS'];
 
@@ -472,14 +690,18 @@ function setFloor(n) {
 }
 
 function setWP(v) {
+  const old = willpower;
   willpower = Math.max(0, Math.min(maxStat, v));
+  if (willpower < old) totalWillpowerLost += (old - willpower);
   document.getElementById('wpFill').style.width = (willpower / maxStat * 100) + '%';
   document.getElementById('wpText').textContent = willpower + '/' + maxStat;
   if (willpower <= 0) triggerDeath('willpower');
 }
 
 function setSN(v) {
+  const old = sanity;
   sanity = Math.max(0, Math.min(maxStat, v));
+  if (sanity < old) totalSanityLost += (old - sanity);
   document.getElementById('snFill').style.width = (sanity / maxStat * 100) + '%';
   document.getElementById('snText').textContent = sanity + '/' + maxStat;
   if (sanity <= 0) triggerDeath('sanity');
@@ -487,29 +709,24 @@ function setSN(v) {
 
 // ===================== DEATH FAKE-OUT =====================
 function triggerDeath(type) {
+  deathCount++;
   playDeath();
   const overlay = document.getElementById('game-over');
   const msg = document.getElementById('death-message');
   const revive = document.getElementById('revive-text');
 
   if (type === 'willpower') {
-    msg.innerHTML = 'Your Will to Live has reached zero.<br><br>You attempt to lie down in the stairwell and accept your fate.<br><br>Unfortunately, HR has denied your death request.<br>Reason: "Insufficient PTO balance for permanent leave."';
+    msg.innerHTML = 'Your Will to Live has reached zero.<br><br>' + playerName + ' attempts to lie down in the stairwell and accept their fate.<br><br>Unfortunately, HR has denied your death request.<br>Reason: "Insufficient PTO balance for permanent leave."';
   } else {
-    msg.innerHTML = 'Your Sanity has reached zero.<br><br>You begin speaking entirely in corporate buzzwords.<br>"Let\'s leverage our core synergies to action a paradigm shift."<br><br>A passing manager promotes you. You decline.';
+    msg.innerHTML = 'Your Sanity has reached zero.<br><br>' + playerName + ' begins speaking entirely in corporate buzzwords.<br>"Let\'s leverage our core synergies to action a paradigm shift."<br><br>A passing manager promotes you. You decline.';
   }
 
   revive.textContent = '';
   overlay.classList.add('show');
 
-  setTimeout(() => {
-    revive.textContent = 'RETURN TO YOUR DESK IN 3...';
-  }, 2500);
-  setTimeout(() => {
-    revive.textContent = 'RETURN TO YOUR DESK IN 2...';
-  }, 3500);
-  setTimeout(() => {
-    revive.textContent = 'RETURN TO YOUR DESK IN 1...';
-  }, 4500);
+  setTimeout(() => { revive.textContent = 'RETURN TO YOUR DESK IN 3...'; }, 2500);
+  setTimeout(() => { revive.textContent = 'RETURN TO YOUR DESK IN 2...'; }, 3500);
+  setTimeout(() => { revive.textContent = 'RETURN TO YOUR DESK IN 1...'; }, 4500);
   setTimeout(() => {
     overlay.classList.remove('show');
     willpower = Math.max(willpower, 3);
@@ -522,38 +739,26 @@ function triggerDeath(type) {
 
 // ===================== TYPEWRITER =====================
 function typewrite(element, html, callback) {
-  // Parse HTML to extract text nodes and tags
   const temp = document.createElement('div');
   temp.innerHTML = html;
-  const fullText = temp.textContent;
   element.innerHTML = '';
   element.style.visibility = 'visible';
 
   let cancelled = false;
   typewriterAbort = () => { cancelled = true; };
 
-  // Simple approach: reveal character by character using the raw HTML
   let charIndex = 0;
   const speed = 22;
   let inTag = false;
   let displayHtml = '';
 
   function tick() {
-    if (cancelled) {
-      element.innerHTML = html;
-      if (callback) callback();
-      return;
-    }
-    if (charIndex >= html.length) {
-      element.innerHTML = html;
-      if (callback) callback();
-      return;
-    }
+    if (cancelled) { element.innerHTML = html; if (callback) callback(); return; }
+    if (charIndex >= html.length) { element.innerHTML = html; if (callback) callback(); return; }
 
     const ch = html[charIndex];
     if (ch === '<') inTag = true;
     if (inTag) {
-      // consume entire tag at once
       let tagEnd = html.indexOf('>', charIndex);
       if (tagEnd === -1) tagEnd = html.length - 1;
       displayHtml += html.substring(charIndex, tagEnd + 1);
@@ -567,75 +772,106 @@ function typewrite(element, html, callback) {
     element.innerHTML = displayHtml;
     setTimeout(tick, inTag ? 0 : speed);
   }
-
   tick();
 }
 
 // ===================== RENDERER =====================
-function render(scene) {
-  const sceneEl = document.getElementById('scene');
-  const choicesEl = document.getElementById('choices');
-  sceneEl.innerHTML = '';
-  choicesEl.innerHTML = '';
+function render(scene, skipTransition) {
+  const doRender = () => {
+    roomsVisited++;
+    const sceneEl = document.getElementById('scene');
+    const choicesEl = document.getElementById('choices');
+    sceneEl.innerHTML = '';
+    choicesEl.innerHTML = '';
 
-  if (typewriterAbort) { typewriterAbort(); typewriterAbort = null; }
+    if (typewriterAbort) { typewriterAbort(); typewriterAbort = null; }
 
-  // Art (instant)
-  if (scene.art) {
-    const art = document.createElement('div');
-    art.className = 'art';
-    art.textContent = scene.art;
-    sceneEl.appendChild(art);
-  }
-
-  // Title (instant)
-  if (scene.title) {
-    const h2 = document.createElement('h2');
-    h2.textContent = scene.title;
-    sceneEl.appendChild(h2);
-  }
-
-  // Typewrite paragraphs sequentially
-  const paragraphs = [];
-  scene.text.forEach(t => {
-    const p = document.createElement('p');
-    p.style.visibility = 'hidden';
-    p.dataset.html = t;
-    sceneEl.appendChild(p);
-    paragraphs.push(p);
-  });
-
-  function typeNextParagraph(index) {
-    if (index >= paragraphs.length) {
-      // Done with text, show HTML content and choices
-      if (scene.html) {
-        const div = document.createElement('div');
-        div.innerHTML = scene.html;
-        div.className = 'fade-in';
-        sceneEl.appendChild(div);
-        // If this is the finale, do paragraph reveal
-        if (scene.revealLetter) {
-          setTimeout(() => revealLetterParagraphs(), 500);
-        }
-      }
-      showChoices(scene.choices || []);
-      return;
+    if (scene.art) {
+      const art = document.createElement('div');
+      art.className = 'art';
+      art.textContent = scene.art;
+      sceneEl.appendChild(art);
     }
-    const p = paragraphs[index];
-    typewrite(p, p.dataset.html, () => {
-      typeNextParagraph(index + 1);
+
+    if (scene.title) {
+      const h2 = document.createElement('h2');
+      h2.textContent = scene.title;
+      sceneEl.appendChild(h2);
+    }
+
+    // Build elements: mix of plain text, dialogue with portraits
+    const elements = [];
+    scene.text.forEach(t => {
+      if (t.portrait) {
+        // Dialogue with portrait
+        const row = document.createElement('div');
+        row.className = 'dialogue-row';
+
+        const port = document.createElement('div');
+        port.className = 'portrait';
+        const pInfo = PORTRAITS[t.portrait] || { art: '?', name: '???' };
+        port.textContent = pInfo.art;
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'portrait-name';
+        nameSpan.textContent = pInfo.name;
+        port.appendChild(nameSpan);
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'dialogue-text';
+        textDiv.style.visibility = 'hidden';
+        textDiv.dataset.html = t.text;
+
+        row.appendChild(port);
+        row.appendChild(textDiv);
+        sceneEl.appendChild(row);
+        elements.push({ el: textDiv, html: t.text });
+      } else {
+        const p = document.createElement('p');
+        p.style.visibility = 'hidden';
+        const html = typeof t === 'string' ? t : t.text;
+        p.dataset.html = html;
+        sceneEl.appendChild(p);
+        elements.push({ el: p, html: html });
+      }
     });
-  }
 
-  sceneEl.className = 'fade-in';
+    function typeNextElement(index) {
+      if (index >= elements.length) {
+        if (scene.html) {
+          const div = document.createElement('div');
+          div.innerHTML = scene.html;
+          div.className = 'fade-in';
+          sceneEl.appendChild(div);
+          if (scene.revealLetter) setTimeout(() => revealLetterParagraphs(), 500);
+        }
+        if (scene.summaryHtml) {
+          const sumDiv = document.createElement('div');
+          sumDiv.innerHTML = scene.summaryHtml;
+          sumDiv.className = 'fade-in';
+          sumDiv.style.opacity = '0';
+          sumDiv.style.transition = 'opacity 1s ease';
+          sceneEl.appendChild(sumDiv);
+          setTimeout(() => { sumDiv.style.opacity = '1'; }, 1000);
+        }
+        showChoices(scene.choices || []);
+        return;
+      }
+      const item = elements[index];
+      typewrite(item.el, item.html, () => typeNextElement(index + 1));
+    }
 
-  // Allow clicking anywhere to skip typewriter
-  const skipHandler = () => {
-    if (typewriterAbort) typewriterAbort();
+    sceneEl.className = 'fade-in';
+    sceneEl.addEventListener('click', () => { if (typewriterAbort) typewriterAbort(); }, { once: false });
+
+    typeNextElement(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  sceneEl.addEventListener('click', skipHandler, { once: false });
 
-  typeNextParagraph(0);
+  if (skipTransition) {
+    doRender();
+  } else {
+    screenTransition(doRender);
+  }
 }
 
 function showChoices(choices) {
@@ -659,37 +895,84 @@ function showChoices(choices) {
       pendingScene = c.action;
       if (c.wp) setWP(willpower + c.wp);
       if (c.sn) setSN(sanity + c.sn);
-      // Only proceed if not dead (death handler will resume)
-      if (willpower > 0 && sanity > 0) {
-        c.action();
-      }
+      if (willpower > 0 && sanity > 0) c.action();
     });
     choicesEl.appendChild(btn);
-    // stagger button fade-in
-    setTimeout(() => {
-      btn.style.opacity = '1';
-      btn.style.transform = 'translateY(0)';
-    }, 100 + i * 120);
+    setTimeout(() => { btn.style.opacity = '1'; btn.style.transform = 'translateY(0)'; }, 100 + i * 120);
   });
 }
 
-// ===================== LETTER PARAGRAPH REVEAL =====================
+// ===================== LETTER REVEAL =====================
 function revealLetterParagraphs() {
   const paragraphs = document.querySelectorAll('.letter-paragraph');
   paragraphs.forEach((p, i) => {
-    setTimeout(() => {
-      p.classList.add('visible');
-    }, i * 600);
+    setTimeout(() => p.classList.add('visible'), i * 600);
   });
 }
 
-/* ==========================================
-   SCENES
-   ========================================== */
+// ===================== HELPER: replace {NAME} =====================
+function n(str) { return str.replace(/\{NAME\}/g, playerName); }
 
-function intro() {
+/* ==========================================================
+   SCENES
+   ========================================================== */
+
+function nameEntry() {
   setFloor(0);
   document.getElementById('floor-label').textContent = '';
+
+  const sceneEl = document.getElementById('scene');
+  const choicesEl = document.getElementById('choices');
+  sceneEl.innerHTML = '';
+  choicesEl.innerHTML = '';
+
+  sceneEl.innerHTML = `
+    <div class="art">
+  _____________________________________
+ |  _________________________________  |
+ | |            SYNERGEX             | |
+ | |    "Innovating Disruption"(TM)  | |
+ | |_________________________________| |
+ |_____________________________________|
+    </div>
+    <h2>~ THE CORPORATE DUNGEON ~</h2>
+    <p style="font-size:9px;line-height:1.9;margin-bottom:16px;">Before your quest begins, the ancient badge reader demands your identity.</p>
+    <div class="name-prompt">
+      <p style="font-size:8px;color:#ffd700;margin-bottom:12px;">WHAT IS YOUR NAME, TRAVELER?</p>
+      <input type="text" id="name-input" placeholder="Enter your name..." maxlength="20" autofocus />
+    </div>
+  `;
+  sceneEl.className = 'fade-in';
+
+  const btn = document.createElement('button');
+  btn.textContent = '> Etch your name into the badge';
+  btn.style.opacity = '0';
+  btn.style.transform = 'translateY(8px)';
+  btn.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
+  btn.addEventListener('click', () => {
+    playClick();
+    const input = document.getElementById('name-input');
+    const name = (input.value || '').trim();
+    playerName = name || 'Traveler';
+    intro();
+  });
+
+  choicesEl.appendChild(btn);
+  setTimeout(() => { btn.style.opacity = '1'; btn.style.transform = 'translateY(0)'; }, 300);
+
+  // Allow Enter key
+  setTimeout(() => {
+    const input = document.getElementById('name-input');
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') btn.click();
+      });
+    }
+  }, 100);
+}
+
+function intro() {
   render({
     art: `
   _____________________________________
@@ -701,7 +984,7 @@ function intro() {
     `,
     title: '~ THE CORPORATE DUNGEON ~',
     text: [
-      'You awaken at your desk. The fluorescent lights hum a frequency that only the damned can hear.',
+      n('Welcome, {NAME}. You awaken at your desk. The fluorescent lights hum a frequency that only the damned can hear.'),
       'Your inbox has 347 unread emails. Your calendar is a Tetris board of overlapping meetings.',
       'Somewhere in this building, legend speaks of a Sacred Scroll that grants freedom to whoever finds it.',
       '<span class="flavor">But first... you must survive the day.</span>',
@@ -709,7 +992,7 @@ function intro() {
     choices: [
       { text: '> Clock in and begin the quest', action: room_lobby },
     ]
-  });
+  }, true);
 }
 
 /* THE LOBBY */
@@ -726,10 +1009,8 @@ function room_lobby() {
     `,
     title: 'FLOOR 1 - THE LOBBY OF ETERNAL BADGING',
     text: [
-      'You swipe your badge. The light turns red.',
-      'You swipe again. Red.',
-      'The security guard watches you with the dead eyes of a man who has seen a thousand badge failures.',
-      '"Badge not working? You gotta go to IT. Third floor. But the elevator is broken. Has been since Q2."',
+      n('You swipe your badge. The light turns red. You swipe again. Red.'),
+      { portrait: 'guard', text: n('"Badge not working, {NAME}? You gotta go to IT. Third floor. But the elevator is broken. Has been since Q2."') },
     ],
     choices: [
       { text: '> Take the stairs to IT on Floor 3', action: room_stairs },
@@ -745,7 +1026,7 @@ function room_lobby_swipe() {
     text: [
       'Swipe. Red. Swipe. Red. Swipe. Red.',
       'A line forms behind you. Someone coughs passive-aggressively.',
-      'The security guard has started filming you on his phone.',
+      { portrait: 'guard', text: 'The security guard has started filming you on his phone.' },
       '<span class="flavor">Your will to live decreases.</span>',
     ],
     choices: [
@@ -799,6 +1080,7 @@ function room_stairs() {
 }
 
 function room_stairs_eat() {
+  granolaEaten = true;
   render({
     title: 'THE STAIRWELL',
     text: [
@@ -846,19 +1128,20 @@ function room_kitchen() {
     title: 'FLOOR 2 - THE BREAK ROOM OF PASSIVE AGGRESSION',
     text: [
       'The break room. Battleground of stolen lunches and aggressive sticky notes.',
-      'The fridge hums ominously. A note reads: "TO WHOEVER KEEPS TAKING MY OATMILK: I KNOW WHO YOU ARE. -Lisa, Head of Recovre"',
+      { portrait: 'lisa', text: 'A note on the fridge reads: "TO WHOEVER KEEPS TAKING MY OATMILK: I KNOW WHO YOU ARE. -Lisa, Head of Recovre"' },
       'There is cold coffee in the pot. The "Who Finished The Coffee" sign-up sheet is empty. It has always been empty.',
-      'A coworker, Cameron, is heating fish in the microwave. The Geneva Convention weeps.',
+      { portrait: 'cameron', text: 'A coworker, Cameron, is heating fish in the microwave. The Geneva Convention weeps.' },
     ],
     choices: [
       { text: '> Drink the cold, day-old coffee', wp: 1, action: room_kitchen_coffee },
-      { text: '> Confront Cameron about the fish', sn: -1, shake: true, action: room_kitchen_greg },
+      { text: '> Confront Cameron about the fish', sn: -1, shake: true, action: room_kitchen_cameron },
       { text: '> Just pass through to Floor 3', action: room_meeting },
     ]
   });
 }
 
 function room_kitchen_coffee() {
+  coffeeConsumed = true;
   render({
     title: 'THE BREAK ROOM',
     text: [
@@ -872,11 +1155,12 @@ function room_kitchen_coffee() {
   });
 }
 
-function room_kitchen_greg() {
+function room_kitchen_cameron() {
+  cameronEncountered = true;
   render({
     title: 'THE BREAK ROOM',
     text: [
-      '"Oh hey!" says Cameron, completely unbothered. "Want some? It\'s tilapia Tuesday!"',
+      { portrait: 'cameron', text: n('"Oh hey, {NAME}!" says Cameron, completely unbothered. "Want some? It\'s tilapia Tuesday!"') },
       'It is Wednesday.',
       'Cameron does not know what day it is. Cameron has transcended the calendar. Cameron is free in a way you will never be.',
       '<span class="flavor">-1 Sanity. You envy Cameron.</span>',
@@ -906,7 +1190,7 @@ function room_meeting() {
       'Floor 3 is nothing but meeting rooms, all named after inspirational figures who would be horrified by what happens inside them.',
       'To reach IT, you must pass through the dreaded Conference Room "Da Vinci."',
       'The door opens. Inside, a meeting is already in progress. The topic: "Aligning on the Alignment of Our Alignment Strategy."',
-      'A project manager spots you. "Oh perfect, we needed one more stakeholder! Sit down!"',
+      { portrait: 'pm', text: n('"Oh perfect, {NAME}! We needed one more stakeholder! Sit down!"') },
     ],
     choices: [
       { text: '> Sit down and endure the meeting', sn: -2, shake: true, action: room_meeting_sit },
@@ -917,11 +1201,12 @@ function room_meeting() {
 }
 
 function room_meeting_sit() {
+  meetingsSurvived++;
   render({
     title: 'CONFERENCE ROOM "DA VINCI"',
     text: [
       'The next 45 minutes are a blur of buzzwords.',
-      '"Let\'s take this offline." "Let\'s circle back." "Let\'s put a pin in it." "Let\'s unpin the pin we pinned last sprint."',
+      { portrait: 'pm', text: '"Let\'s take this offline." "Let\'s circle back." "Let\'s put a pin in it." "Let\'s unpin the pin we pinned last sprint."' },
       'Someone shares their screen. It\'s a spreadsheet with 47 tabs. No one knows what it tracks.',
       'The meeting ends with no action items and a follow-up meeting scheduled for tomorrow.',
       '<span class="flavor">-2 Sanity. You aged three years in 45 minutes.</span>',
@@ -933,10 +1218,11 @@ function room_meeting_sit() {
 }
 
 function room_meeting_hardstop() {
+  meetingsSurvived++;
   render({
     title: 'CONFERENCE ROOM "DA VINCI"',
     text: [
-      '"Hard stop? No problem!" The PM smiles. "Let\'s just do a quick round of intros and align on next steps."',
+      { portrait: 'pm', text: '"Hard stop? No problem! Let\'s just do a quick round of intros and align on next steps."' },
       '22 minutes later, the intros are done. There are 6 people in the room.',
       'You slip out during a debate about whether to use Jira, Asana, or "just a shared Google Doc."',
       '<span class="flavor">You survived. Barely.</span>',
@@ -948,12 +1234,13 @@ function room_meeting_hardstop() {
 }
 
 function room_meeting_phone() {
+  meetingsSurvived++;
   render({
     title: 'FLOOR 3 - HALLWAY',
     text: [
       'You hold your silent phone to your ear. "Oh no, I have to take this, so sorry."',
       'You power-walk out. No one questions it. Everyone wishes they had thought of it first.',
-      'Through the glass wall, you see the PM has started a breakout session about the breakout session.',
+      { portrait: 'pm', text: 'Through the glass wall, you see the PM has started a breakout session about the breakout session.' },
       '<span class="flavor">-1 Will to Live for the guilt. But freedom tastes sweet.</span>',
     ],
     choices: [
@@ -979,9 +1266,8 @@ function room_it() {
     title: 'THE IT DUNGEON',
     text: [
       'You\'ve reached IT. The room is dimly lit by the glow of six monitors, all showing different Linux terminals.',
-      'A figure sits in the darkness, wearing a hoodie that says "No, I Will Not Fix Your Printer."',
-      'This is the IT Wizard. They do not look up.',
-      '"Ticket number?"',
+      { portrait: 'wizard', text: 'A figure sits in the darkness, wearing a hoodie that says "No, I Will Not Fix Your Printer." They do not look up.' },
+      { portrait: 'wizard', text: '"Ticket number?"' },
     ],
     choices: [
       { text: '> "I don\'t have a ticket..."', action: room_it_noticket },
@@ -995,10 +1281,9 @@ function room_it_noticket() {
   render({
     title: 'THE IT DUNGEON',
     text: [
-      'The IT Wizard finally looks up. Their eyes contain the weight of ten thousand password resets.',
-      '"No ticket. No service. That\'s the policy."',
-      '"But..." they lean forward, "...I sense something in you. A weariness. A tiredness of spirit."',
-      '"You\'re not here for the badge, are you?"',
+      { portrait: 'wizard', text: '"No ticket. No service. That\'s the policy."' },
+      { portrait: 'wizard', text: n('"But..." they lean forward. "...I sense something in you, {NAME}. A weariness. A tiredness of spirit."') },
+      { portrait: 'wizard', text: '"You\'re not here for the badge, are you?"' },
     ],
     choices: [
       { text: '> "...what do you mean?"', action: room_it_reveal },
@@ -1010,10 +1295,9 @@ function room_it_quick() {
   render({
     title: 'THE IT DUNGEON',
     text: [
-      'The IT Wizard lets out a laugh so hollow it echoes off the server racks.',
-      '"Quick? QUICK? Nothing in this company is quick. Do you know how many \'quick\' things I\'ve been asked to do today? My queue is 400 tickets deep."',
-      '"But..." their expression softens. "You remind me of someone. Me. Three years ago."',
-      '"Before the tickets consumed me."',
+      { portrait: 'wizard', text: '"Quick? QUICK? Nothing in this company is quick. Do you know how many \'quick\' things I\'ve been asked to do today? My queue is 400 tickets deep."' },
+      { portrait: 'wizard', text: n('"But..." their expression softens. "You remind me of someone, {NAME}. Me. Three years ago."') },
+      { portrait: 'wizard', text: '"Before the tickets consumed me."' },
     ],
     choices: [
       { text: '> "Are you... okay?"', action: room_it_reveal },
@@ -1025,10 +1309,9 @@ function room_it_offering() {
   render({
     title: 'THE IT DUNGEON',
     text: [
-      'You produce the cold coffee. The IT Wizard\'s eyes widen.',
-      '"Is that... break room coffee? The forbidden brew?"',
+      { portrait: 'wizard', text: '"Is that... break room coffee? The forbidden brew?"' },
       'They take a sip. Wince. But nod with respect.',
-      '"You have earned my trust. And my truth."',
+      { portrait: 'wizard', text: '"You have earned my trust. And my truth."' },
     ],
     choices: [
       { text: '> "Your truth?"', action: room_it_reveal },
@@ -1041,9 +1324,9 @@ function room_it_reveal() {
     title: 'THE IT DUNGEON',
     text: [
       'The IT Wizard stands and pulls back a server rack, revealing a hidden passage.',
-      '"There is a place beyond the fluorescent lights. Beyond the synergies and the standups."',
-      '"I found it once, but I could not bring myself to go through. I had too many open tickets."',
-      '"But you... you still have a chance."',
+      { portrait: 'wizard', text: '"There is a place beyond the fluorescent lights. Beyond the synergies and the standups."' },
+      { portrait: 'wizard', text: '"I found it once, but I could not bring myself to go through. I had too many open tickets."' },
+      { portrait: 'wizard', text: n('"But you, {NAME}... you still have a chance."') },
       'A golden light spills from the passage. You feel the Sacred Scroll calling to you.',
     ],
     choices: [
@@ -1057,9 +1340,9 @@ function room_passage() {
   render({
     title: 'THE IT DUNGEON',
     text: [
-      '"Freedom," the IT Wizard whispers. "Or at least... a really important document."',
-      '"The last person who went through came back different. Lighter. They cleaned out their desk the next day and were never seen again."',
-      '"Legend says they opened a bakery. Or became a yoga instructor. Accounts vary."',
+      { portrait: 'wizard', text: '"Freedom. Or at least... a really important document."' },
+      { portrait: 'wizard', text: '"The last person who went through came back different. Lighter. They cleaned out their desk the next day and were never seen again."' },
+      { portrait: 'wizard', text: '"Legend says they opened a bakery. Or became a yoga instructor. Accounts vary."' },
       'The IT Wizard hands you a flickering USB drive. "Take this. You might need it. Or not. I\'m IT, not a fortune teller."',
     ],
     choices: [
@@ -1083,8 +1366,7 @@ function room_final() {
     text: [
       'The passage opens into a room bathed in golden light.',
       'In the center, floating above a pedestal made of recycled org charts, is the Sacred Scroll.',
-      'A final guardian appears. It is the company mascot - a cartoon eagle wearing a tie and holding a KPI dashboard.',
-      '"To claim the scroll, answer this: What has two weeks\' notice, no turning back, and sets you free?"',
+      { portrait: 'eagle', text: n('"Ah, {NAME}. You\'ve made it. To claim the scroll, answer this: What has two weeks\' notice, no turning back, and sets you free?"') },
     ],
     choices: [
       { text: '> "A... vacation request?"', sn: -1, shake: true, action: room_final_wrong1 },
@@ -1098,8 +1380,8 @@ function room_final_wrong1() {
   render({
     title: 'THE CHAMBER OF THE SACRED SCROLL',
     text: [
-      'The eagle laughs. "Vacation? VACATION? Your PTO request was denied three months ago and you know it."',
-      '"Try again, brave corporate warrior."',
+      { portrait: 'eagle', text: '"Vacation? VACATION? Your PTO request was denied three months ago and you know it."' },
+      { portrait: 'eagle', text: '"Try again, brave corporate warrior."' },
     ],
     choices: [
       { text: '> "A resignation!"', action: room_final_correct },
@@ -1112,8 +1394,8 @@ function room_final_wrong2() {
   render({
     title: 'THE CHAMBER OF THE SACRED SCROLL',
     text: [
-      'The eagle checks a spreadsheet. "At your current 401k contribution rate? Retirement is approximately... never."',
-      '"Guess again."',
+      { portrait: 'eagle', text: '"At your current super contribution rate? Retirement is approximately... never."' },
+      { portrait: 'eagle', text: '"Guess again."' },
     ],
     choices: [
       { text: '> "A resignation!"', action: room_final_correct },
@@ -1126,9 +1408,9 @@ function room_final_wrong3() {
   render({
     title: 'THE CHAMBER OF THE SACRED SCROLL',
     text: [
-      'The eagle sighs and loosens its tie.',
-      '"Look, I\'ll just tell you. The scroll has been waiting for someone brave enough to claim it."',
-      '"The answer is a RESIGNATION. Always has been."',
+      { portrait: 'eagle', text: 'The eagle sighs and loosens its tie.' },
+      { portrait: 'eagle', text: '"Look, I\'ll just tell you. The scroll has been waiting for someone brave enough to claim it."' },
+      { portrait: 'eagle', text: '"The answer is a RESIGNATION. Always has been."' },
     ],
     choices: [
       { text: '> Claim the Sacred Scroll', action: finale },
@@ -1140,9 +1422,9 @@ function room_final_correct() {
   render({
     title: 'THE CHAMBER OF THE SACRED SCROLL',
     text: [
-      '"A RESIGNATION!" The eagle salutes you, a single tear rolling down its cartoon beak.',
-      '"I\'ve been guarding this scroll for years, hoping someone would have the courage."',
-      '"Take it. You\'ve earned it. Go live a life that doesn\'t require a standup meeting every morning."',
+      { portrait: 'eagle', text: '"A RESIGNATION!" The eagle salutes you, a single tear rolling down its cartoon beak.' },
+      { portrait: 'eagle', text: n('"I\'ve been guarding this scroll for years, hoping someone like you would come, {NAME}."') },
+      { portrait: 'eagle', text: '"Take it. You\'ve earned it. Go live a life that doesn\'t require a standup meeting every morning."' },
       'The scroll drifts into your hands, glowing warmly.',
     ],
     choices: [
@@ -1157,19 +1439,34 @@ function finale() {
   setWP(maxStat);
   setSN(maxStat);
   document.getElementById('floor-label').textContent = 'FREEDOM';
-  for (let i = 0; i < 5; i++) {
-    document.getElementById('dot' + i).classList.add('active');
-  }
+  for (let i = 0; i < 5; i++) document.getElementById('dot' + i).classList.add('active');
   playFanfare();
+  startConfetti();
+
+  // Build summary
+  const summaryLines = [];
+  summaryLines.push('<div class="stat-line">Adventurer: <span>' + playerName + '</span></div>');
+  summaryLines.push('<div class="stat-line">Rooms Explored: <span>' + roomsVisited + '</span></div>');
+  summaryLines.push('<div class="stat-line">Meetings Survived: <span>' + meetingsSurvived + '</span></div>');
+  summaryLines.push('<div class="stat-line">Sanity Lost: <span>' + totalSanityLost + ' points</span></div>');
+  summaryLines.push('<div class="stat-line">Will to Live Lost: <span>' + totalWillpowerLost + ' points</span></div>');
+  summaryLines.push('<div class="stat-line">Times Died at Desk: <span>' + deathCount + '</span></div>');
+  if (granolaEaten) summaryLines.push('<div class="stat-line">Expired Granola Bars Consumed: <span>1 (brave)</span></div>');
+  if (coffeeConsumed) summaryLines.push('<div class="stat-line">Day-Old Coffee Consumed: <span>1 (desperate)</span></div>');
+  if (cameronEncountered) summaryLines.push('<div class="stat-line">Fish Microwaved by Cameron: <span>too many</span></div>');
+  summaryLines.push('<div class="stat-line" style="margin-top:10px;color:#ffd700;">Status: <span>FREE</span></div>');
+
+  const summaryHtml = '<div class="quest-summary"><h3>~ QUEST COMPLETE ~</h3>' + summaryLines.join('') + '</div>';
 
   render({
     title: 'THE SACRED SCROLL HAS BEEN CLAIMED',
     text: [
       'The fluorescent lights flicker and die. Natural sunlight pours through the windows for the first time.',
-      'Your Outlook calendar clears itself. Your Slack status changes to "Free."',
+      n('{NAME}\'s Outlook calendar clears itself. Their Slack status changes to "Free."'),
       'You unroll the scroll and begin to read...',
     ],
     revealLetter: true,
+    summaryHtml: summaryHtml,
     html: `
       <div class="scroll-reveal">
         <h3>~ THE SACRED SCROLL ~</h3>
@@ -1191,7 +1488,7 @@ function finale() {
 }
 
 // Start
-intro();
+nameEntry();
 </script>
 </body>
 </html>
