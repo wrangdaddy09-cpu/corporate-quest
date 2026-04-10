@@ -846,13 +846,13 @@ function room_kitchen() {
     title: 'FLOOR 2 - THE BREAK ROOM OF PASSIVE AGGRESSION',
     text: [
       'The break room. Battleground of stolen lunches and aggressive sticky notes.',
-      'The fridge hums ominously. A note reads: "TO WHOEVER KEEPS TAKING MY OATMILK: I KNOW WHO YOU ARE. -Karen from Accounting"',
+      'The fridge hums ominously. A note reads: "TO WHOEVER KEEPS TAKING MY OATMILK: I KNOW WHO YOU ARE. -Lisa, Head of Recovre"',
       'There is cold coffee in the pot. The "Who Finished The Coffee" sign-up sheet is empty. It has always been empty.',
-      'A coworker, Greg, is heating fish in the microwave. The Geneva Convention weeps.',
+      'A coworker, Cameron, is heating fish in the microwave. The Geneva Convention weeps.',
     ],
     choices: [
       { text: '> Drink the cold, day-old coffee', wp: 1, action: room_kitchen_coffee },
-      { text: '> Confront Greg about the fish', sn: -1, shake: true, action: room_kitchen_greg },
+      { text: '> Confront Cameron about the fish', sn: -1, shake: true, action: room_kitchen_greg },
       { text: '> Just pass through to Floor 3', action: room_meeting },
     ]
   });
@@ -876,13 +876,13 @@ function room_kitchen_greg() {
   render({
     title: 'THE BREAK ROOM',
     text: [
-      '"Oh hey!" says Greg, completely unbothered. "Want some? It\'s tilapia Tuesday!"',
+      '"Oh hey!" says Cameron, completely unbothered. "Want some? It\'s tilapia Tuesday!"',
       'It is Wednesday.',
-      'Greg does not know what day it is. Greg has transcended the calendar. Greg is free in a way you will never be.',
-      '<span class="flavor">-1 Sanity. You envy Greg.</span>',
+      'Cameron does not know what day it is. Cameron has transcended the calendar. Cameron is free in a way you will never be.',
+      '<span class="flavor">-1 Sanity. You envy Cameron.</span>',
     ],
     choices: [
-      { text: '> Leave before you become Greg', action: room_meeting },
+      { text: '> Leave before you become Cameron', action: room_meeting },
     ]
   });
 }
