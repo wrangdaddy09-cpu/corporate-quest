@@ -17,8 +17,24 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 40px 0;
+    padding: 20px 0;
     overflow-y: auto;
+  }
+
+  /* CRT Scanline Overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.15) 2px,
+      rgba(0, 0, 0, 0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
   }
 
   #game {
@@ -28,48 +44,86 @@
     border: 3px solid #444;
     border-radius: 12px;
     box-shadow: 0 0 40px rgba(100, 60, 255, 0.3);
-    padding: 32px;
+    padding: 24px;
     position: relative;
     margin: auto;
   }
 
+  /* Floor progress indicator */
+  #floor-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-size: 7px;
+    color: #555;
+  }
+
+  #floor-indicator .floor-dot {
+    width: 28px;
+    height: 6px;
+    background: #1a1a2e;
+    border: 1px solid #333;
+    border-radius: 3px;
+    transition: all 0.5s;
+  }
+
+  #floor-indicator .floor-dot.active {
+    background: #ffd700;
+    border-color: #ffd700;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+  }
+
+  #floor-indicator .floor-dot.visited {
+    background: #555;
+    border-color: #666;
+  }
+
+  #floor-label {
+    text-align: center;
+    font-size: 7px;
+    color: #666;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+  }
+
   #scene {
-    min-height: 240px;
-    margin-bottom: 24px;
+    min-height: 200px;
+    margin-bottom: 20px;
   }
 
   #scene h2 {
-    font-size: 13px;
+    font-size: 11px;
     color: #ffd700;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
   }
 
   #scene .art {
-    font-size: 9px;
+    font-size: 8px;
     line-height: 1.3;
     color: #7f7faf;
     white-space: pre;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     text-align: center;
   }
 
   #scene p {
-    font-size: 10px;
-    line-height: 1.8;
-    margin-bottom: 12px;
+    font-size: 9px;
+    line-height: 1.9;
+    margin-bottom: 10px;
   }
 
   #choices {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   #choices button {
     font-family: 'Press Start 2P', monospace;
-    font-size: 9px;
-    padding: 14px 18px;
+    font-size: 8px;
+    padding: 12px 16px;
     background: #1e1e3a;
     color: #aac;
     border: 2px solid #3a3a6a;
@@ -89,14 +143,18 @@
   .stat-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 8px;
+    gap: 8px;
+    font-size: 7px;
     color: #aaa;
+  }
+
+  .stat-bar .label {
+    min-width: 90px;
   }
 
   .stat-bar .bar {
     flex: 1;
-    height: 12px;
+    height: 10px;
     background: #1a1a2e;
     border: 1px solid #444;
     border-radius: 4px;
@@ -111,8 +169,8 @@
   #stats {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-bottom: 20px;
+    gap: 5px;
+    margin-bottom: 14px;
   }
 
   .fill-willpower { background: linear-gradient(90deg, #ff4444, #ff8844, #44ff44); }
@@ -143,24 +201,32 @@
     background: linear-gradient(135deg, #2a1a0a, #1a1208);
     border: 3px solid #a08040;
     border-radius: 8px;
-    padding: 28px;
+    padding: 24px;
     margin-top: 12px;
     box-shadow: 0 0 30px rgba(160, 128, 64, 0.3);
   }
 
   .scroll-reveal h3 {
     color: #ffd700;
-    font-size: 11px;
-    margin-bottom: 18px;
+    font-size: 10px;
+    margin-bottom: 16px;
     text-align: center;
   }
 
-  .scroll-reveal .letter {
+  .scroll-reveal .letter-paragraph {
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.9;
     color: #d4c4a0;
-    white-space: pre-wrap;
+    margin-bottom: 16px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .scroll-reveal .letter-paragraph.visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .fade-in { animation: fadeIn 1.2s ease-in; }
@@ -176,24 +242,114 @@
     75% { transform: translateX(6px); }
   }
 
-  .flavor {
-    color: #888;
-    font-style: italic;
+  .flavor { color: #888; font-style: italic; }
+
+  /* Game Over overlay */
+  #game-over {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  #game-over.show { display: flex; }
+
+  #game-over h1 {
+    color: #ff4444;
+    font-size: 24px;
+    text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+    animation: glitch 0.3s infinite;
+  }
+
+  #game-over p {
+    color: #aaa;
+    font-size: 10px;
+    text-align: center;
+    line-height: 2;
+    max-width: 500px;
+    padding: 0 20px;
+  }
+
+  #game-over .revive-text {
+    color: #ffd700;
+    font-size: 8px;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes glitch {
+    0% { transform: translate(0); }
+    25% { transform: translate(-2px, 1px); }
+    50% { transform: translate(2px, -1px); }
+    75% { transform: translate(-1px, -1px); }
+    100% { transform: translate(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    body { padding: 10px 0; }
+
+    #game { padding: 16px; border-radius: 8px; }
+
+    #scene h2 { font-size: 9px; }
+    #scene .art { font-size: 6px; }
+    #scene p { font-size: 8px; line-height: 1.8; }
+
+    #choices button { font-size: 7px; padding: 10px 12px; }
+
+    .stat-bar { font-size: 6px; gap: 5px; }
+    .stat-bar .label { min-width: 70px; }
+
+    #floor-indicator { gap: 5px; }
+    #floor-indicator .floor-dot { width: 20px; height: 5px; }
+    #floor-label { font-size: 6px; }
+
+    .scroll-reveal { padding: 16px; }
+    .scroll-reveal h3 { font-size: 8px; }
+    .scroll-reveal .letter-paragraph { font-size: 12px; line-height: 1.7; }
+
+    #game-over h1 { font-size: 16px; }
+    #game-over p { font-size: 8px; }
   }
 </style>
 </head>
 <body>
 
 <div class="stars" id="stars"></div>
+
+<div id="game-over">
+  <h1>YOU HAVE DIED</h1>
+  <p id="death-message"></p>
+  <p class="revive-text" id="revive-text"></p>
+</div>
+
 <div id="game">
+  <div id="floor-indicator">
+    <div class="floor-dot" id="dot0"></div>
+    <div class="floor-dot" id="dot1"></div>
+    <div class="floor-dot" id="dot2"></div>
+    <div class="floor-dot" id="dot3"></div>
+    <div class="floor-dot" id="dot4"></div>
+  </div>
+  <div id="floor-label"></div>
   <div id="stats">
     <div class="stat-bar">
-      <span>WILL TO LIVE</span>
+      <span class="label">WILL TO LIVE</span>
       <div class="bar"><div class="fill fill-willpower" id="wpFill" style="width:100%"></div></div>
       <span id="wpText">10/10</span>
     </div>
     <div class="stat-bar">
-      <span>SANITY&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <span class="label">SANITY</span>
       <div class="bar"><div class="fill fill-sanity" id="snFill" style="width:100%"></div></div>
       <span id="snText">10/10</span>
     </div>
@@ -203,7 +359,87 @@
 </div>
 
 <script>
-// Stars
+// ===================== AUDIO ENGINE =====================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+}
+
+function playClick() {
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'square';
+  o.frequency.setValueAtTime(600, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.08);
+  g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+  o.start(); o.stop(audioCtx.currentTime + 0.1);
+}
+
+function playWrong() {
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(250, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.3);
+  g.gain.setValueAtTime(0.07, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+  o.start(); o.stop(audioCtx.currentTime + 0.3);
+}
+
+function playDeath() {
+  ensureAudio();
+  const notes = [400, 350, 280, 200];
+  notes.forEach((freq, i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'square';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.08, audioCtx.currentTime + i * 0.2);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.2 + 0.2);
+    o.start(audioCtx.currentTime + i * 0.2);
+    o.stop(audioCtx.currentTime + i * 0.2 + 0.25);
+  });
+}
+
+function playFanfare() {
+  ensureAudio();
+  const melody = [523, 659, 784, 1047, 784, 1047];
+  const durations = [0.15, 0.15, 0.15, 0.3, 0.1, 0.5];
+  let t = audioCtx.currentTime;
+  melody.forEach((freq, i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'square';
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.07, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + durations[i]);
+    o.start(t);
+    o.stop(t + durations[i] + 0.05);
+    t += durations[i];
+  });
+}
+
+function playTypeChar() {
+  ensureAudio();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'square';
+  o.frequency.value = 800 + Math.random() * 200;
+  g.gain.setValueAtTime(0.015, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+  o.start(); o.stop(audioCtx.currentTime + 0.03);
+}
+
+// ===================== STARS =====================
 const starsEl = document.getElementById('stars');
 for (let i = 0; i < 80; i++) {
   const s = document.createElement('div');
@@ -215,69 +451,245 @@ for (let i = 0; i < 80; i++) {
   starsEl.appendChild(s);
 }
 
+// ===================== GAME STATE =====================
 let willpower = 10, sanity = 10;
-const max = 10;
+const maxStat = 10;
+let currentFloor = 0;
+let pendingScene = null; // stores the scene to resume after death
+let typewriterAbort = null; // to cancel ongoing typewriter on skip
+
+const floorNames = ['LOBBY', 'STAIRWELL', 'BREAK ROOM', 'FLOOR 3', 'THE DEPTHS'];
+
+function setFloor(n) {
+  currentFloor = n;
+  for (let i = 0; i < 5; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.className = 'floor-dot';
+    if (i < n) dot.classList.add('visited');
+    if (i === n) dot.classList.add('active');
+  }
+  document.getElementById('floor-label').textContent = n < 5 ? floorNames[n] : '';
+}
 
 function setWP(v) {
-  willpower = Math.max(0, Math.min(max, v));
-  document.getElementById('wpFill').style.width = (willpower / max * 100) + '%';
-  document.getElementById('wpText').textContent = willpower + '/' + max;
-}
-function setSN(v) {
-  sanity = Math.max(0, Math.min(max, v));
-  document.getElementById('snFill').style.width = (sanity / max * 100) + '%';
-  document.getElementById('snText').textContent = sanity + '/' + max;
+  willpower = Math.max(0, Math.min(maxStat, v));
+  document.getElementById('wpFill').style.width = (willpower / maxStat * 100) + '%';
+  document.getElementById('wpText').textContent = willpower + '/' + maxStat;
+  if (willpower <= 0) triggerDeath('willpower');
 }
 
+function setSN(v) {
+  sanity = Math.max(0, Math.min(maxStat, v));
+  document.getElementById('snFill').style.width = (sanity / maxStat * 100) + '%';
+  document.getElementById('snText').textContent = sanity + '/' + maxStat;
+  if (sanity <= 0) triggerDeath('sanity');
+}
+
+// ===================== DEATH FAKE-OUT =====================
+function triggerDeath(type) {
+  playDeath();
+  const overlay = document.getElementById('game-over');
+  const msg = document.getElementById('death-message');
+  const revive = document.getElementById('revive-text');
+
+  if (type === 'willpower') {
+    msg.innerHTML = 'Your Will to Live has reached zero.<br><br>You attempt to lie down in the stairwell and accept your fate.<br><br>Unfortunately, HR has denied your death request.<br>Reason: "Insufficient PTO balance for permanent leave."';
+  } else {
+    msg.innerHTML = 'Your Sanity has reached zero.<br><br>You begin speaking entirely in corporate buzzwords.<br>"Let\'s leverage our core synergies to action a paradigm shift."<br><br>A passing manager promotes you. You decline.';
+  }
+
+  revive.textContent = '';
+  overlay.classList.add('show');
+
+  setTimeout(() => {
+    revive.textContent = 'RETURN TO YOUR DESK IN 3...';
+  }, 2500);
+  setTimeout(() => {
+    revive.textContent = 'RETURN TO YOUR DESK IN 2...';
+  }, 3500);
+  setTimeout(() => {
+    revive.textContent = 'RETURN TO YOUR DESK IN 1...';
+  }, 4500);
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    willpower = Math.max(willpower, 3);
+    sanity = Math.max(sanity, 3);
+    setWP(willpower);
+    setSN(sanity);
+    if (pendingScene) pendingScene();
+  }, 5500);
+}
+
+// ===================== TYPEWRITER =====================
+function typewrite(element, html, callback) {
+  // Parse HTML to extract text nodes and tags
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  const fullText = temp.textContent;
+  element.innerHTML = '';
+  element.style.visibility = 'visible';
+
+  let cancelled = false;
+  typewriterAbort = () => { cancelled = true; };
+
+  // Simple approach: reveal character by character using the raw HTML
+  let charIndex = 0;
+  const speed = 22;
+  let inTag = false;
+  let displayHtml = '';
+
+  function tick() {
+    if (cancelled) {
+      element.innerHTML = html;
+      if (callback) callback();
+      return;
+    }
+    if (charIndex >= html.length) {
+      element.innerHTML = html;
+      if (callback) callback();
+      return;
+    }
+
+    const ch = html[charIndex];
+    if (ch === '<') inTag = true;
+    if (inTag) {
+      // consume entire tag at once
+      let tagEnd = html.indexOf('>', charIndex);
+      if (tagEnd === -1) tagEnd = html.length - 1;
+      displayHtml += html.substring(charIndex, tagEnd + 1);
+      charIndex = tagEnd + 1;
+      if (ch !== '<' || html[charIndex - 1] === '>') inTag = false;
+    } else {
+      displayHtml += ch;
+      charIndex++;
+      if (ch !== ' ' && Math.random() > 0.6) playTypeChar();
+    }
+    element.innerHTML = displayHtml;
+    setTimeout(tick, inTag ? 0 : speed);
+  }
+
+  tick();
+}
+
+// ===================== RENDERER =====================
 function render(scene) {
   const sceneEl = document.getElementById('scene');
   const choicesEl = document.getElementById('choices');
   sceneEl.innerHTML = '';
   choicesEl.innerHTML = '';
 
+  if (typewriterAbort) { typewriterAbort(); typewriterAbort = null; }
+
+  // Art (instant)
   if (scene.art) {
     const art = document.createElement('div');
     art.className = 'art';
     art.textContent = scene.art;
     sceneEl.appendChild(art);
   }
+
+  // Title (instant)
   if (scene.title) {
     const h2 = document.createElement('h2');
     h2.textContent = scene.title;
     sceneEl.appendChild(h2);
   }
+
+  // Typewrite paragraphs sequentially
+  const paragraphs = [];
   scene.text.forEach(t => {
     const p = document.createElement('p');
-    p.innerHTML = t;
+    p.style.visibility = 'hidden';
+    p.dataset.html = t;
     sceneEl.appendChild(p);
+    paragraphs.push(p);
   });
-  if (scene.html) {
-    const div = document.createElement('div');
-    div.innerHTML = scene.html;
-    div.className = 'fade-in';
-    sceneEl.appendChild(div);
+
+  function typeNextParagraph(index) {
+    if (index >= paragraphs.length) {
+      // Done with text, show HTML content and choices
+      if (scene.html) {
+        const div = document.createElement('div');
+        div.innerHTML = scene.html;
+        div.className = 'fade-in';
+        sceneEl.appendChild(div);
+        // If this is the finale, do paragraph reveal
+        if (scene.revealLetter) {
+          setTimeout(() => revealLetterParagraphs(), 500);
+        }
+      }
+      showChoices(scene.choices || []);
+      return;
+    }
+    const p = paragraphs[index];
+    typewrite(p, p.dataset.html, () => {
+      typeNextParagraph(index + 1);
+    });
   }
+
   sceneEl.className = 'fade-in';
 
-  (scene.choices || []).forEach(c => {
+  // Allow clicking anywhere to skip typewriter
+  const skipHandler = () => {
+    if (typewriterAbort) typewriterAbort();
+  };
+  sceneEl.addEventListener('click', skipHandler, { once: false });
+
+  typeNextParagraph(0);
+}
+
+function showChoices(choices) {
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+
+  choices.forEach((c, i) => {
     const btn = document.createElement('button');
     btn.textContent = c.text;
+    btn.style.opacity = '0';
+    btn.style.transform = 'translateY(8px)';
+    btn.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
     btn.addEventListener('click', () => {
+      if (c.shake) {
+        playWrong();
+        document.getElementById('game').classList.add('shake');
+        setTimeout(() => document.getElementById('game').classList.remove('shake'), 500);
+      } else {
+        playClick();
+      }
+      pendingScene = c.action;
       if (c.wp) setWP(willpower + c.wp);
       if (c.sn) setSN(sanity + c.sn);
-      if (c.shake) document.getElementById('game').classList.add('shake');
-      setTimeout(() => document.getElementById('game').classList.remove('shake'), 500);
-      c.action();
+      // Only proceed if not dead (death handler will resume)
+      if (willpower > 0 && sanity > 0) {
+        c.action();
+      }
     });
     choicesEl.appendChild(btn);
+    // stagger button fade-in
+    setTimeout(() => {
+      btn.style.opacity = '1';
+      btn.style.transform = 'translateY(0)';
+    }, 100 + i * 120);
+  });
+}
+
+// ===================== LETTER PARAGRAPH REVEAL =====================
+function revealLetterParagraphs() {
+  const paragraphs = document.querySelectorAll('.letter-paragraph');
+  paragraphs.forEach((p, i) => {
+    setTimeout(() => {
+      p.classList.add('visible');
+    }, i * 600);
   });
 }
 
 /* ==========================================
-   ACT I - THE ONBOARDING
+   SCENES
    ========================================== */
 
 function intro() {
+  setFloor(0);
+  document.getElementById('floor-label').textContent = '';
   render({
     art: `
   _____________________________________
@@ -300,11 +712,10 @@ function intro() {
   });
 }
 
-/* ==========================================
-   THE LOBBY - THE BADGE DOESN'T WORK
-   ========================================== */
+/* THE LOBBY */
 
 function room_lobby() {
+  setFloor(0);
   render({
     art: `
      ___________
@@ -359,11 +770,10 @@ function room_lobby_tailgate() {
   });
 }
 
-/* ==========================================
-   THE STAIRWELL
-   ========================================== */
+/* THE STAIRWELL */
 
 function room_stairs() {
+  setFloor(1);
   render({
     art: `
     |  _____|
@@ -418,11 +828,10 @@ function room_stairs_posters() {
   });
 }
 
-/* ==========================================
-   FLOOR 2 - THE KITCHEN / BREAK ROOM
-   ========================================== */
+/* FLOOR 2 - BREAK ROOM */
 
 function room_kitchen() {
+  setFloor(2);
   render({
     art: `
      _____________
@@ -478,11 +887,10 @@ function room_kitchen_greg() {
   });
 }
 
-/* ==========================================
-   FLOOR 3 - THE MEETING ROOM GAUNTLET
-   ========================================== */
+/* FLOOR 3 - MEETING ROOM */
 
 function room_meeting() {
+  setFloor(3);
   render({
     art: `
   ________________________________
@@ -554,11 +962,10 @@ function room_meeting_phone() {
   });
 }
 
-/* ==========================================
-   IT SUPPORT - THE FINAL BOSS
-   ========================================== */
+/* IT SUPPORT */
 
 function room_it() {
+  setFloor(4);
   render({
     art: `
        _______________
@@ -661,9 +1068,7 @@ function room_passage() {
   });
 }
 
-/* ==========================================
-   THE FINAL ROOM
-   ========================================== */
+/* THE FINAL ROOM */
 
 function room_final() {
   render({
@@ -746,13 +1151,17 @@ function room_final_correct() {
   });
 }
 
-/* ==========================================
-   THE FINALE
-   ========================================== */
+/* THE FINALE */
 
 function finale() {
-  setWP(max);
-  setSN(max);
+  setWP(maxStat);
+  setSN(maxStat);
+  document.getElementById('floor-label').textContent = 'FREEDOM';
+  for (let i = 0; i < 5; i++) {
+    document.getElementById('dot' + i).classList.add('active');
+  }
+  playFanfare();
+
   render({
     title: 'THE SACRED SCROLL HAS BEEN CLAIMED',
     text: [
@@ -760,34 +1169,21 @@ function finale() {
       'Your Outlook calendar clears itself. Your Slack status changes to "Free."',
       'You unroll the scroll and begin to read...',
     ],
+    revealLetter: true,
     html: `
       <div class="scroll-reveal">
         <h3>~ THE SACRED SCROLL ~</h3>
-        <div class="letter">
-Dear Chandra,
-
-After a fair bit of thought, and a prognosis I'm comfortable calling excellent, I'm writing to formally resign from my position at Recovre, effective 8 May 2026. The plan from here is a graduated return to autonomy, commencing immediately.
-
-I'll be straight about what's brought me to this point, because it matters more than the usual line about "new opportunities." For the better part of two years now, I've felt professionally stagnant and genuinely unchallenged in a role that offered very little when it came to leadership development or progression. That frustration is a big part of why I put $70,000 of my own money into an MBA. It wasn't a vanity exercise. I wanted to grow in ways Recovre wasn't giving me the chance to. I don't regret the investment for a second, but I do find it telling that the skills and perspective I picked up along the way mostly served to widen the gap between where I was heading and where Recovre appeared to be standing still.
-
-The MBA also had the inconvenient side effect of sharpening my eye for poor strategic leadership. I say this with no pleasure: in my view, Recovre lacks clear direction, meaningful differentiation in a competitive market, and the calibre of leadership required to fix either. These aren't new problems, and they're not the kind that resolve themselves through another restructure, another town hall, or another round of values workshopping. I've watched this organisation rearrange the furniture while the foundations shift, and I'd rather not be in the building when the architecture is tested.
-
-Closer to home, the state of the WA team is a case in point. Towards the tail end of last year, myself and the other PCs raised concerns about the structural fragility of the team and the trajectory we were heading on. I know you were across those conversations, and I also know the levers available to you as a manager aren't always the ones that need pulling. The reality is that decisions made, or more accurately not made, above and around us have left the team in exactly the position we flagged. I'm not saying this to point fingers at you personally. I'm saying it because this letter should reflect what actually happened, not a tidied-up version of it. The warning signs were there. The window to act on them has since closed.
-
-While I'm on the subject of structural frustrations, I'd be remiss not to mention HR Services, an entity I've come to regard with the same cautious optimism you'd give a vending machine that's taken your money before. Over my time here, I raised a number of queries and concerns through the proper channels. The pattern was remarkably consistent. First, acknowledgement of the ticket. Then a brief silence that suggested careful deliberation. Then a longer silence that suggested the ticket had been forgotten entirely. And finally, the coup de gr\u00e2ce: a notification that the matter had been closed. Resolved, apparently, by the passage of time and the quiet hope I'd stop asking. I didn't stop asking. They did, however, stop answering. If nothing else, it was a masterclass in managed disengagement.
-
-None of the above should overshadow the fact that my departure isn't a reflection of you as a manager, or of the people I've worked alongside. The mission of getting injured workers back on their feet, back to meaningful employment, and back to their lives matters, and I'm proud to have been part of it. The colleagues I've worked with in WA are talented, dedicated, and deserving of far better support than they've been given. I leave them with enormous respect and, should any of them ever need a consultant who already knows where the bodies are buried, my details won't be hard to find.
-
-I'll of course see out my notice period with full duties and no restrictions. Consider this my Certificate of Capacity: unrestricted, no review required.
-
-Thanks, Chandra, for your support during my time here. I've valued our working relationship and I wish you and the team genuinely well, with the sincere hope that someone, somewhere, finally reads the notes from last year.
-
-Yours professionally, and with zero residual bitterness,
-
-Ryan
-Principal Consultant
-Recovre, WA (Outgoing)
-        </div>
+        <div class="letter-paragraph">Dear Chandra,</div>
+        <div class="letter-paragraph">After a fair bit of thought, and a prognosis I'm comfortable calling excellent, I'm writing to formally resign from my position at Recovre, effective 8 May 2026. The plan from here is a graduated return to autonomy, commencing immediately.</div>
+        <div class="letter-paragraph">I'll be straight about what's brought me to this point, because it matters more than the usual line about "new opportunities." For the better part of two years now, I've felt professionally stagnant and genuinely unchallenged in a role that offered very little when it came to leadership development or progression. That frustration is a big part of why I put $70,000 of my own money into an MBA. It wasn't a vanity exercise. I wanted to grow in ways Recovre wasn't giving me the chance to. I don't regret the investment for a second, but I do find it telling that the skills and perspective I picked up along the way mostly served to widen the gap between where I was heading and where Recovre appeared to be standing still.</div>
+        <div class="letter-paragraph">The MBA also had the inconvenient side effect of sharpening my eye for poor strategic leadership. I say this with no pleasure: in my view, Recovre lacks clear direction, meaningful differentiation in a competitive market, and the calibre of leadership required to fix either. These aren't new problems, and they're not the kind that resolve themselves through another restructure, another town hall, or another round of values workshopping. I've watched this organisation rearrange the furniture while the foundations shift, and I'd rather not be in the building when the architecture is tested.</div>
+        <div class="letter-paragraph">Closer to home, the state of the WA team is a case in point. Towards the tail end of last year, myself and the other PCs raised concerns about the structural fragility of the team and the trajectory we were heading on. I know you were across those conversations, and I also know the levers available to you as a manager aren't always the ones that need pulling. The reality is that decisions made, or more accurately not made, above and around us have left the team in exactly the position we flagged. I'm not saying this to point fingers at you personally. I'm saying it because this letter should reflect what actually happened, not a tidied-up version of it. The warning signs were there. The window to act on them has since closed.</div>
+        <div class="letter-paragraph">While I'm on the subject of structural frustrations, I'd be remiss not to mention HR Services, an entity I've come to regard with the same cautious optimism you'd give a vending machine that's taken your money before. Over my time here, I raised a number of queries and concerns through the proper channels. The pattern was remarkably consistent. First, acknowledgement of the ticket. Then a brief silence that suggested careful deliberation. Then a longer silence that suggested the ticket had been forgotten entirely. And finally, the coup de gr\u00e2ce: a notification that the matter had been closed. Resolved, apparently, by the passage of time and the quiet hope I'd stop asking. I didn't stop asking. They did, however, stop answering. If nothing else, it was a masterclass in managed disengagement.</div>
+        <div class="letter-paragraph">None of the above should overshadow the fact that my departure isn't a reflection of you as a manager, or of the people I've worked alongside. The mission of getting injured workers back on their feet, back to meaningful employment, and back to their lives matters, and I'm proud to have been part of it. The colleagues I've worked with in WA are talented, dedicated, and deserving of far better support than they've been given. I leave them with enormous respect and, should any of them ever need a consultant who already knows where the bodies are buried, my details won't be hard to find.</div>
+        <div class="letter-paragraph">I'll of course see out my notice period with full duties and no restrictions. Consider this my Certificate of Capacity: unrestricted, no review required.</div>
+        <div class="letter-paragraph">Thanks, Chandra, for your support during my time here. I've valued our working relationship and I wish you and the team genuinely well, with the sincere hope that someone, somewhere, finally reads the notes from last year.</div>
+        <div class="letter-paragraph">Yours professionally, and with zero residual bitterness,</div>
+        <div class="letter-paragraph">Ryan<br>Principal Consultant<br>Recovre, WA (Outgoing)</div>
       </div>
     `,
     choices: []
