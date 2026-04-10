@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Quest for the Sacred Scroll</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a1a;
+    color: #e0e0e0;
+    font-family: 'Press Start 2P', monospace;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  #game {
+    width: 720px;
+    max-width: 95vw;
+    background: #12122a;
+    border: 3px solid #444;
+    border-radius: 12px;
+    box-shadow: 0 0 40px rgba(100, 60, 255, 0.3);
+    padding: 32px;
+    position: relative;
+  }
+
+  #scene {
+    min-height: 240px;
+    margin-bottom: 24px;
+  }
+
+  #scene h2 {
+    font-size: 13px;
+    color: #ffd700;
+    margin-bottom: 16px;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  }
+
+  #scene .art {
+    font-size: 9px;
+    line-height: 1.3;
+    color: #7f7faf;
+    white-space: pre;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  #scene p {
+    font-size: 10px;
+    line-height: 1.8;
+    margin-bottom: 12px;
+  }
+
+  #choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #choices button {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 14px 18px;
+    background: #1e1e3a;
+    color: #aac;
+    border: 2px solid #3a3a6a;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+  }
+
+  #choices button:hover {
+    background: #2a2a5a;
+    border-color: #ffd700;
+    color: #ffd700;
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+  }
+
+  .stat-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 8px;
+    color: #aaa;
+  }
+
+  .stat-bar .bar {
+    flex: 1;
+    height: 12px;
+    background: #1a1a2e;
+    border: 1px solid #444;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .stat-bar .bar .fill {
+    height: 100%;
+    transition: width 0.5s;
+  }
+
+  #stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .fill-willpower { background: linear-gradient(90deg, #ff4444, #ff8844, #44ff44); }
+  .fill-sanity { background: linear-gradient(90deg, #4444ff, #8844ff, #44ffff); }
+
+  .stars {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 3s infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+  }
+
+  .scroll-reveal {
+    background: linear-gradient(135deg, #2a1a0a, #1a1208);
+    border: 3px solid #a08040;
+    border-radius: 8px;
+    padding: 28px;
+    margin-top: 12px;
+    box-shadow: 0 0 30px rgba(160, 128, 64, 0.3);
+  }
+
+  .scroll-reveal h3 {
+    color: #ffd700;
+    font-size: 11px;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .scroll-reveal .letter {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 15px;
+    line-height: 1.9;
+    color: #d4c4a0;
+    white-space: pre-wrap;
+  }
+
+  .fade-in { animation: fadeIn 1.2s ease-in; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .flavor {
+    color: #888;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div id="game">
+  <div id="stats">
+    <div class="stat-bar">
+      <span>WILL TO LIVE</span>
+      <div class="bar"><div class="fill fill-willpower" id="wpFill" style="width:100%"></div></div>
+      <span id="wpText">10/10</span>
+    </div>
+    <div class="stat-bar">
+      <span>SANITY&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <div class="bar"><div class="fill fill-sanity" id="snFill" style="width:100%"></div></div>
+      <span id="snText">10/10</span>
+    </div>
+  </div>
+  <div id="scene"></div>
+  <div id="choices"></div>
+</div>
+
+<script>
+// Stars
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 80; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.style.left = Math.random() * 100 + '%';
+  s.style.top = Math.random() * 100 + '%';
+  s.style.animationDelay = Math.random() * 3 + 's';
+  s.style.opacity = Math.random() * 0.5 + 0.1;
+  starsEl.appendChild(s);
+}
+
+let willpower = 10, sanity = 10;
+const max = 10;
+
+function setWP(v) {
+  willpower = Math.max(0, Math.min(max, v));
+  document.getElementById('wpFill').style.width = (willpower / max * 100) + '%';
+  document.getElementById('wpText').textContent = willpower + '/' + max;
+}
+function setSN(v) {
+  sanity = Math.max(0, Math.min(max, v));
+  document.getElementById('snFill').style.width = (sanity / max * 100) + '%';
+  document.getElementById('snText').textContent = sanity + '/' + max;
+}
+
+function render(scene) {
+  const sceneEl = document.getElementById('scene');
+  const choicesEl = document.getElementById('choices');
+  sceneEl.innerHTML = '';
+  choicesEl.innerHTML = '';
+
+  if (scene.art) {
+    const art = document.createElement('div');
+    art.className = 'art';
+    art.textContent = scene.art;
+    sceneEl.appendChild(art);
+  }
+  if (scene.title) {
+    const h2 = document.createElement('h2');
+    h2.textContent = scene.title;
+    sceneEl.appendChild(h2);
+  }
+  scene.text.forEach(t => {
+    const p = document.createElement('p');
+    p.innerHTML = t;
+    sceneEl.appendChild(p);
+  });
+  if (scene.html) {
+    const div = document.createElement('div');
+    div.innerHTML = scene.html;
+    div.className = 'fade-in';
+    sceneEl.appendChild(div);
+  }
+  sceneEl.className = 'fade-in';
+
+  (scene.choices || []).forEach(c => {
+    const btn = document.createElement('button');
+    btn.textContent = c.text;
+    btn.addEventListener('click', () => {
+      if (c.wp) setWP(willpower + c.wp);
+      if (c.sn) setSN(sanity + c.sn);
+      if (c.shake) document.getElementById('game').classList.add('shake');
+      setTimeout(() => document.getElementById('game').classList.remove('shake'), 500);
+      c.action();
+    });
+    choicesEl.appendChild(btn);
+  });
+}
+
+/* ==========================================
+   ACT I - THE ONBOARDING
+   ========================================== */
+
+function intro() {
+  render({
+    art: `
+  _____________________________________
+ |  _________________________________  |
+ | |            SYNERGEX             | |
+ | |    "Innovating Disruption"(TM)  | |
+ | |_________________________________| |
+ |_____________________________________|
+    `,
+    title: '~ THE CORPORATE DUNGEON ~',
+    text: [
+      'You awaken at your desk. The fluorescent lights hum a frequency that only the damned can hear.',
+      'Your inbox has 347 unread emails. Your calendar is a Tetris board of overlapping meetings.',
+      'Somewhere in this building, legend speaks of a Sacred Scroll that grants freedom to whoever finds it.',
+      '<span class="flavor">But first... you must survive the day.</span>',
+    ],
+    choices: [
+      { text: '> Clock in and begin the quest', action: room_lobby },
+    ]
+  });
+}
+
+/* ==========================================
+   THE LOBBY - THE BADGE DOESN'T WORK
+   ========================================== */
+
+function room_lobby() {
+  render({
+    art: `
+     ___________
+    |  ACCESS   |
+    |  DENIED   |
+    |___________|
+       [_____]
+    `,
+    title: 'FLOOR 1 - THE LOBBY OF ETERNAL BADGING',
+    text: [
+      'You swipe your badge. The light turns red.',
+      'You swipe again. Red.',
+      'The security guard watches you with the dead eyes of a man who has seen a thousand badge failures.',
+      '"Badge not working? You gotta go to IT. Third floor. But the elevator is broken. Has been since Q2."',
+    ],
+    choices: [
+      { text: '> Take the stairs to IT on Floor 3', action: room_stairs },
+      { text: '> Swipe the badge 47 more times', wp: -1, shake: true, action: room_lobby_swipe },
+      { text: '> Tailgate behind someone', sn: -1, action: room_lobby_tailgate },
+    ]
+  });
+}
+
+function room_lobby_swipe() {
+  render({
+    title: 'FLOOR 1 - THE LOBBY OF ETERNAL BADGING',
+    text: [
+      'Swipe. Red. Swipe. Red. Swipe. Red.',
+      'A line forms behind you. Someone coughs passive-aggressively.',
+      'The security guard has started filming you on his phone.',
+      '<span class="flavor">Your will to live decreases.</span>',
+    ],
+    choices: [
+      { text: '> Fine. Take the stairs.', action: room_stairs },
+      { text: '> Tailgate behind someone', sn: -1, action: room_lobby_tailgate },
+    ]
+  });
+}
+
+function room_lobby_tailgate() {
+  render({
+    title: 'FLOOR 1 - THE LOBBY',
+    text: [
+      'You slip in behind a group of consultants. They smell like espresso and hubris.',
+      'You\'re in. But at what cost? You feel a piece of your integrity left at the door.',
+      'The consultants are loudly debating whether "blockchain" or "AI" is the better buzzword to put in the Q3 deck.',
+      '<span class="flavor">You hear one of them say "synergize the deliverables" unironically.</span>',
+    ],
+    choices: [
+      { text: '> Head to the stairs', action: room_stairs },
+    ]
+  });
+}
+
+/* ==========================================
+   THE STAIRWELL
+   ========================================== */
+
+function room_stairs() {
+  render({
+    art: `
+    |  _____|
+    | |  _____|
+    | | |  _____|
+    | | | |
+    |_| | |
+      |_| |
+        |_|
+    `,
+    title: 'THE STAIRWELL OF BROKEN DREAMS',
+    text: [
+      'The stairwell smells like microwaved fish and regret.',
+      'Motivational posters line the walls. "TEAMWORK: Together Everyone Achieves More!" says one, hanging crooked above a puddle of mysterious origin.',
+      'On the second floor landing, you find a vending machine. It has one item left: a granola bar from 2019.',
+    ],
+    choices: [
+      { text: '> Eat the ancient granola bar', wp: 1, action: room_stairs_eat },
+      { text: '> Ignore it and keep climbing', action: room_kitchen },
+      { text: '> Read every motivational poster', sn: -2, shake: true, action: room_stairs_posters },
+    ]
+  });
+}
+
+function room_stairs_eat() {
+  render({
+    title: 'THE STAIRWELL',
+    text: [
+      'It tastes like cardboard and broken promises. But it\'s the first thing you\'ve eaten since yesterday\'s "optional" working lunch.',
+      '<span class="flavor">+1 Will to Live. Questionable, but you feel something.</span>',
+      'You continue climbing.',
+    ],
+    choices: [
+      { text: '> Onward to Floor 2', action: room_kitchen },
+    ]
+  });
+}
+
+function room_stairs_posters() {
+  render({
+    title: 'THE STAIRWELL',
+    text: [
+      '"INNOVATION: Because \'We\'ve Always Done It This Way\' is Not a Strategy!"',
+      '"EXCELLENCE: It\'s Not Just a Word, It\'s a Slightly Longer Word!"',
+      '"HUSTLE: Sleep is a Concept Invented by People Without OKRs!"',
+      'You finish reading them all. You can feel your sanity leaving your body like steam from a coffee cup no one refilled.',
+      '<span class="flavor">-2 Sanity. You will never get those minutes back.</span>',
+    ],
+    choices: [
+      { text: '> Continue to Floor 2, haunted', action: room_kitchen },
+    ]
+  });
+}
+
+/* ==========================================
+   FLOOR 2 - THE KITCHEN / BREAK ROOM
+   ========================================== */
+
+function room_kitchen() {
+  render({
+    art: `
+     _____________
+    |  BREAK ROOM |
+    |  ~~~~ ~~~~  |
+    | |    |  |=| |
+    | | DO |  |_| |
+    | | NOT|      |
+    | |TOUCH     |
+    |_____________|
+    `,
+    title: 'FLOOR 2 - THE BREAK ROOM OF PASSIVE AGGRESSION',
+    text: [
+      'The break room. Battleground of stolen lunches and aggressive sticky notes.',
+      'The fridge hums ominously. A note reads: "TO WHOEVER KEEPS TAKING MY OATMILK: I KNOW WHO YOU ARE. -Karen from Accounting"',
+      'There is cold coffee in the pot. The "Who Finished The Coffee" sign-up sheet is empty. It has always been empty.',
+      'A coworker, Greg, is heating fish in the microwave. The Geneva Convention weeps.',
+    ],
+    choices: [
+      { text: '> Drink the cold, day-old coffee', wp: 1, action: room_kitchen_coffee },
+      { text: '> Confront Greg about the fish', sn: -1, shake: true, action: room_kitchen_greg },
+      { text: '> Just pass through to Floor 3', action: room_meeting },
+    ]
+  });
+}
+
+function room_kitchen_coffee() {
+  render({
+    title: 'THE BREAK ROOM',
+    text: [
+      'You drink the coffee. It is both burnt and somehow still lukewarm in the worst possible way.',
+      'It tastes like it was brewed during the last reorg. But caffeine is caffeine.',
+      '<span class="flavor">+1 Will to Live. Your hands are shaking but at least you feel alive.</span>',
+    ],
+    choices: [
+      { text: '> Press on to Floor 3', action: room_meeting },
+    ]
+  });
+}
+
+function room_kitchen_greg() {
+  render({
+    title: 'THE BREAK ROOM',
+    text: [
+      '"Oh hey!" says Greg, completely unbothered. "Want some? It\'s tilapia Tuesday!"',
+      'It is Wednesday.',
+      'Greg does not know what day it is. Greg has transcended the calendar. Greg is free in a way you will never be.',
+      '<span class="flavor">-1 Sanity. You envy Greg.</span>',
+    ],
+    choices: [
+      { text: '> Leave before you become Greg', action: room_meeting },
+    ]
+  });
+}
+
+/* ==========================================
+   FLOOR 3 - THE MEETING ROOM GAUNTLET
+   ========================================== */
+
+function room_meeting() {
+  render({
+    art: `
+  ________________________________
+ | ______________________________ |
+ ||  Q3 SYNERGY    |  BLOCKED    ||
+ ||  ALIGNMENT     |  BY: TBD   ||
+ ||  TOUCHBASE     |            ||
+ ||________________|____________||
+ |________________________________|
+    `,
+    title: 'FLOOR 3 - THE MEETING ROOM GAUNTLET',
+    text: [
+      'Floor 3 is nothing but meeting rooms, all named after inspirational figures who would be horrified by what happens inside them.',
+      'To reach IT, you must pass through the dreaded Conference Room "Da Vinci."',
+      'The door opens. Inside, a meeting is already in progress. The topic: "Aligning on the Alignment of Our Alignment Strategy."',
+      'A project manager spots you. "Oh perfect, we needed one more stakeholder! Sit down!"',
+    ],
+    choices: [
+      { text: '> Sit down and endure the meeting', sn: -2, shake: true, action: room_meeting_sit },
+      { text: '> "Sorry, hard stop in 5 minutes"', action: room_meeting_hardstop },
+      { text: '> Pretend your phone is ringing', wp: -1, action: room_meeting_phone },
+    ]
+  });
+}
+
+function room_meeting_sit() {
+  render({
+    title: 'CONFERENCE ROOM "DA VINCI"',
+    text: [
+      'The next 45 minutes are a blur of buzzwords.',
+      '"Let\'s take this offline." "Let\'s circle back." "Let\'s put a pin in it." "Let\'s unpin the pin we pinned last sprint."',
+      'Someone shares their screen. It\'s a spreadsheet with 47 tabs. No one knows what it tracks.',
+      'The meeting ends with no action items and a follow-up meeting scheduled for tomorrow.',
+      '<span class="flavor">-2 Sanity. You aged three years in 45 minutes.</span>',
+    ],
+    choices: [
+      { text: '> Stumble toward IT Support', action: room_it },
+    ]
+  });
+}
+
+function room_meeting_hardstop() {
+  render({
+    title: 'CONFERENCE ROOM "DA VINCI"',
+    text: [
+      '"Hard stop? No problem!" The PM smiles. "Let\'s just do a quick round of intros and align on next steps."',
+      '22 minutes later, the intros are done. There are 6 people in the room.',
+      'You slip out during a debate about whether to use Jira, Asana, or "just a shared Google Doc."',
+      '<span class="flavor">You survived. Barely.</span>',
+    ],
+    choices: [
+      { text: '> Escape to IT Support', action: room_it },
+    ]
+  });
+}
+
+function room_meeting_phone() {
+  render({
+    title: 'FLOOR 3 - HALLWAY',
+    text: [
+      'You hold your silent phone to your ear. "Oh no, I have to take this, so sorry."',
+      'You power-walk out. No one questions it. Everyone wishes they had thought of it first.',
+      'Through the glass wall, you see the PM has started a breakout session about the breakout session.',
+      '<span class="flavor">-1 Will to Live for the guilt. But freedom tastes sweet.</span>',
+    ],
+    choices: [
+      { text: '> Find IT Support', action: room_it },
+    ]
+  });
+}
+
+/* ==========================================
+   IT SUPPORT - THE FINAL BOSS
+   ========================================== */
+
+function room_it() {
+  render({
+    art: `
+       _______________
+      |  IT SUPPORT   |
+      |  Ticket #:    |
+      |  40,091       |
+      |  Status:      |
+      |  "PENDING"    |
+      |_______________|
+    `,
+    title: 'THE IT DUNGEON',
+    text: [
+      'You\'ve reached IT. The room is dimly lit by the glow of six monitors, all showing different Linux terminals.',
+      'A figure sits in the darkness, wearing a hoodie that says "No, I Will Not Fix Your Printer."',
+      'This is the IT Wizard. They do not look up.',
+      '"Ticket number?"',
+    ],
+    choices: [
+      { text: '> "I don\'t have a ticket..."', action: room_it_noticket },
+      { text: '> "Can\'t you just fix my badge real quick?"', shake: true, action: room_it_quick },
+      { text: '> "I brought an offering" (show the coffee)', action: room_it_offering },
+    ]
+  });
+}
+
+function room_it_noticket() {
+  render({
+    title: 'THE IT DUNGEON',
+    text: [
+      'The IT Wizard finally looks up. Their eyes contain the weight of ten thousand password resets.',
+      '"No ticket. No service. That\'s the policy."',
+      '"But..." they lean forward, "...I sense something in you. A weariness. A tiredness of spirit."',
+      '"You\'re not here for the badge, are you?"',
+    ],
+    choices: [
+      { text: '> "...what do you mean?"', action: room_it_reveal },
+    ]
+  });
+}
+
+function room_it_quick() {
+  render({
+    title: 'THE IT DUNGEON',
+    text: [
+      'The IT Wizard lets out a laugh so hollow it echoes off the server racks.',
+      '"Quick? QUICK? Nothing in this company is quick. Do you know how many \'quick\' things I\'ve been asked to do today? My queue is 400 tickets deep."',
+      '"But..." their expression softens. "You remind me of someone. Me. Three years ago."',
+      '"Before the tickets consumed me."',
+    ],
+    choices: [
+      { text: '> "Are you... okay?"', action: room_it_reveal },
+    ]
+  });
+}
+
+function room_it_offering() {
+  render({
+    title: 'THE IT DUNGEON',
+    text: [
+      'You produce the cold coffee. The IT Wizard\'s eyes widen.',
+      '"Is that... break room coffee? The forbidden brew?"',
+      'They take a sip. Wince. But nod with respect.',
+      '"You have earned my trust. And my truth."',
+    ],
+    choices: [
+      { text: '> "Your truth?"', action: room_it_reveal },
+    ]
+  });
+}
+
+function room_it_reveal() {
+  render({
+    title: 'THE IT DUNGEON',
+    text: [
+      'The IT Wizard stands and pulls back a server rack, revealing a hidden passage.',
+      '"There is a place beyond the fluorescent lights. Beyond the synergies and the standups."',
+      '"I found it once, but I could not bring myself to go through. I had too many open tickets."',
+      '"But you... you still have a chance."',
+      'A golden light spills from the passage. You feel the Sacred Scroll calling to you.',
+    ],
+    choices: [
+      { text: '> "What\'s on the other side?"', action: room_passage },
+      { text: '> Enter the passage', action: room_final },
+    ]
+  });
+}
+
+function room_passage() {
+  render({
+    title: 'THE IT DUNGEON',
+    text: [
+      '"Freedom," the IT Wizard whispers. "Or at least... a really important document."',
+      '"The last person who went through came back different. Lighter. They cleaned out their desk the next day and were never seen again."',
+      '"Legend says they opened a bakery. Or became a yoga instructor. Accounts vary."',
+      'The IT Wizard hands you a flickering USB drive. "Take this. You might need it. Or not. I\'m IT, not a fortune teller."',
+    ],
+    choices: [
+      { text: '> Enter the passage', action: room_final },
+    ]
+  });
+}
+
+/* ==========================================
+   THE FINAL ROOM
+   ========================================== */
+
+function room_final() {
+  render({
+    art: `
+     .  *  .  *  .  *  .  *  .
+    * . * . * . * . * . * . * .
+     .  *  .  *  .  *  .  *  .
+    * . * . * . * . * . * . * .
+     .  *  .  *  .  *  .  *  .
+    `,
+    title: 'THE CHAMBER OF THE SACRED SCROLL',
+    text: [
+      'The passage opens into a room bathed in golden light.',
+      'In the center, floating above a pedestal made of recycled org charts, is the Sacred Scroll.',
+      'A final guardian appears. It is the company mascot - a cartoon eagle wearing a tie and holding a KPI dashboard.',
+      '"To claim the scroll, answer this: What has two weeks\' notice, no turning back, and sets you free?"',
+    ],
+    choices: [
+      { text: '> "A... vacation request?"', sn: -1, shake: true, action: room_final_wrong1 },
+      { text: '> "A resignation!"', action: room_final_correct },
+      { text: '> "Early retirement?"', shake: true, action: room_final_wrong2 },
+    ]
+  });
+}
+
+function room_final_wrong1() {
+  render({
+    title: 'THE CHAMBER OF THE SACRED SCROLL',
+    text: [
+      'The eagle laughs. "Vacation? VACATION? Your PTO request was denied three months ago and you know it."',
+      '"Try again, brave corporate warrior."',
+    ],
+    choices: [
+      { text: '> "A resignation!"', action: room_final_correct },
+      { text: '> "A... sabbatical?"', shake: true, action: room_final_wrong3 },
+    ]
+  });
+}
+
+function room_final_wrong2() {
+  render({
+    title: 'THE CHAMBER OF THE SACRED SCROLL',
+    text: [
+      'The eagle checks a spreadsheet. "At your current 401k contribution rate? Retirement is approximately... never."',
+      '"Guess again."',
+    ],
+    choices: [
+      { text: '> "A resignation!"', action: room_final_correct },
+      { text: '> "Quiet quitting?"', shake: true, action: room_final_wrong3 },
+    ]
+  });
+}
+
+function room_final_wrong3() {
+  render({
+    title: 'THE CHAMBER OF THE SACRED SCROLL',
+    text: [
+      'The eagle sighs and loosens its tie.',
+      '"Look, I\'ll just tell you. The scroll has been waiting for someone brave enough to claim it."',
+      '"The answer is a RESIGNATION. Always has been."',
+    ],
+    choices: [
+      { text: '> Claim the Sacred Scroll', action: finale },
+    ]
+  });
+}
+
+function room_final_correct() {
+  render({
+    title: 'THE CHAMBER OF THE SACRED SCROLL',
+    text: [
+      '"A RESIGNATION!" The eagle salutes you, a single tear rolling down its cartoon beak.',
+      '"I\'ve been guarding this scroll for years, hoping someone would have the courage."',
+      '"Take it. You\'ve earned it. Go live a life that doesn\'t require a standup meeting every morning."',
+      'The scroll drifts into your hands, glowing warmly.',
+    ],
+    choices: [
+      { text: '> Unroll the Sacred Scroll...', action: finale },
+    ]
+  });
+}
+
+/* ==========================================
+   THE FINALE
+   ========================================== */
+
+function finale() {
+  setWP(max);
+  setSN(max);
+  render({
+    title: 'THE SACRED SCROLL HAS BEEN CLAIMED',
+    text: [
+      'The fluorescent lights flicker and die. Natural sunlight pours through the windows for the first time.',
+      'Your Outlook calendar clears itself. Your Slack status changes to "Free."',
+      'You unroll the scroll and begin to read...',
+    ],
+    html: `
+      <div class="scroll-reveal">
+        <h3>~ THE SACRED SCROLL ~</h3>
+        <div class="letter">
+Dear Chandra,
+
+After what I can only describe as a prolonged period of professional reflection \u2014 and a prognosis I\u2019m comfortable calling excellent \u2014 I am writing to formally resign from my position at Recovre, effective 4 weeks from today. The plan from here is a graduated return to autonomy, commencing immediately.
+
+I want to be honest about what has led me here, because I think it matters more than the usual boilerplate about \u201cnew opportunities.\u201d The truth is that for more than two years, I have felt professionally unchallenged and stagnant in a role that offered little in the way of leadership development or meaningful progression. That frustration was, in no small part, what led me to invest $70,000 of my own money into completing an MBA \u2014 not as a vanity exercise, but because I wanted to grow in ways this organisation was not offering me the opportunity to. I don\u2019t regret the investment. I do, however, find it clarifying that the skills and perspective I gained through it only widened the gap between where I was heading and where Recovre appeared to be standing still.
+
+That MBA also had the inconvenient side effect of sharpening my ability to recognise poor strategic leadership when I see it. I say this with no pleasure: Recovre, in my assessment, lacks clear direction, meaningful differentiation in a competitive market, and the calibre of leadership required to course-correct on either front. These are not new problems, and they are not problems that will resolve themselves through restructures, town halls, or another round of values workshopping. I have watched this organisation rearrange the furniture while the foundations shift, and I no longer wish to be in the building when the architecture is tested.
+
+Closer to home, the state of the WA team is a case in point. In October, I raised concerns about the structural fragility of the team and the trajectory we were on. I know you were aware of those concerns, and I also know that the levers available to you as a manager are not always the ones that need pulling. The reality is that decisions made \u2014 or more accurately, not made \u2014 above and around us have left the team in exactly the position I flagged. I don\u2019t say this to point fingers at you personally; I say it because I think it\u2019s important that this letter reflects the truth of what happened, not a sanitised version of it. The warning signs were there. The window to act on them has since closed.
+
+While I\u2019m on the subject of structural frustrations, I would be remiss not to mention my experience with HR Services \u2014 an entity I have come to regard with the same cautious optimism one reserves for a vending machine that has taken your money before. Over the course of my time here, I raised multiple queries and concerns through the proper channels. The pattern was remarkably consistent: acknowledgement of the ticket, a brief silence that suggested careful deliberation, followed by a longer silence that suggested the ticket had been forgotten entirely, and finally \u2014 the pi\u00e8ce de r\u00e9sistance \u2014 a notification that the matter had been closed. Resolved, apparently, by the passage of time and the quiet hope that I\u2019d stop asking. I did not stop asking. They did, however, stop answering. If nothing else, it was a masterclass in managed disengagement.
+
+None of the above should overshadow the fact that my departure is not a reflection of you as a manager, nor of the people I\u2019ve worked alongside. The mission of getting injured workers back on their feet, back to meaningful employment, and back to their lives \u2014 that work matters, and I remain proud to have contributed to it. The colleagues I\u2019ve worked with in WA are talented, dedicated, and deserving of far better support than they\u2019ve received. I leave them with enormous respect and, should they ever need a consultant who already knows where all the bodies are buried, my details will not be hard to find.
+
+I will of course fulfil my notice period with full duties and no restrictions. Consider this my Certificate of Capacity: unrestricted, no review required.
+
+Thank you, Chandra, for your support during my time here. I have valued our working relationship and wish you and the team genuinely well \u2014 with the sincerest hope that someone, somewhere, finally reads the October notes.
+
+Yours professionally, and with zero residual bitterness,
+
+Ryan
+Principal Consultant
+Recovre \u2014 WA (Outgoing)
+        </div>
+      </div>
+    `,
+    choices: []
+  });
+}
+
+// Start
+intro();
+</script>
+</body>
+</html>
