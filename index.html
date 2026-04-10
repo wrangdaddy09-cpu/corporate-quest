@@ -1026,21 +1026,38 @@ let selfDestructStarted = false;
 let countdownInterval = null;
 
 function setupScrollDetection() {
-  // Use IntersectionObserver on the last letter paragraph
   const lastParagraph = document.querySelector('.letter-paragraph:last-child');
   if (!lastParagraph) return;
 
+  // Approach 1: IntersectionObserver with low threshold
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting && !selfDestructStarted) {
         selfDestructStarted = true;
         observer.disconnect();
+        window.removeEventListener('scroll', scrollFallback);
         startSelfDestruct();
       }
     });
-  }, { threshold: 0.8 });
+  }, { threshold: 0.1 });
 
   observer.observe(lastParagraph);
+
+  // Approach 2: scroll listener fallback
+  function scrollFallback() {
+    if (selfDestructStarted) return;
+    const rect = lastParagraph.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      selfDestructStarted = true;
+      observer.disconnect();
+      window.removeEventListener('scroll', scrollFallback);
+      startSelfDestruct();
+    }
+  }
+
+  window.addEventListener('scroll', scrollFallback);
+  // Also check immediately in case already scrolled
+  scrollFallback();
 }
 
 function playExplosion() {
