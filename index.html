@@ -1016,48 +1016,28 @@ function revealLetterParagraphs() {
     setTimeout(() => p.classList.add('visible'), i * 600);
   });
 
-  // After all paragraphs revealed, set up scroll-bottom detection
-  const totalRevealTime = paragraphs.length * 600 + 1000;
-  setTimeout(() => setupScrollDetection(), totalRevealTime);
+  // Start polling for scroll-to-bottom after a short delay
+  setTimeout(() => setupScrollDetection(), 2000);
 }
 
 // ===================== SELF-DESTRUCT =====================
 let selfDestructStarted = false;
 let countdownInterval = null;
+let scrollPollInterval = null;
 
 function setupScrollDetection() {
-  const lastParagraph = document.querySelector('.letter-paragraph:last-child');
-  if (!lastParagraph) return;
-
-  // Approach 1: IntersectionObserver with low threshold
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && !selfDestructStarted) {
-        selfDestructStarted = true;
-        observer.disconnect();
-        window.removeEventListener('scroll', scrollFallback);
-        startSelfDestruct();
-      }
-    });
-  }, { threshold: 0.1 });
-
-  observer.observe(lastParagraph);
-
-  // Approach 2: scroll listener fallback
-  function scrollFallback() {
-    if (selfDestructStarted) return;
-    const rect = lastParagraph.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
+  // Poll every 500ms checking if the sentinel is in view
+  scrollPollInterval = setInterval(() => {
+    if (selfDestructStarted) { clearInterval(scrollPollInterval); return; }
+    const sentinel = document.getElementById('scroll-sentinel');
+    if (!sentinel) return;
+    const rect = sentinel.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.top > 0) {
       selfDestructStarted = true;
-      observer.disconnect();
-      window.removeEventListener('scroll', scrollFallback);
+      clearInterval(scrollPollInterval);
       startSelfDestruct();
     }
-  }
-
-  window.addEventListener('scroll', scrollFallback);
-  // Also check immediately in case already scrolled
-  scrollFallback();
+  }, 500);
 }
 
 function playExplosion() {
@@ -1727,6 +1707,7 @@ function finale() {
         <div class="letter-paragraph">Thanks, Chandra, for your support during my time here. I've valued our working relationship and I wish you and the team genuinely well, with the sincere hope that someone, somewhere, finally reads the notes from last year.</div>
         <div class="letter-paragraph">Yours professionally, and with zero residual bitterness,</div>
         <div class="letter-paragraph">Ryan<br>Principal Consultant<br>Recovre, WA (Outgoing)</div>
+        <div id="scroll-sentinel" style="height:4px;margin-top:10px;"></div>
       </div>
     `,
     choices: []
