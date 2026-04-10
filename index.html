@@ -414,6 +414,100 @@
     50% { opacity: 1; }
   }
 
+  /* Self-destruct countdown */
+  #countdown-overlay {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  #countdown-overlay.show { display: block; }
+
+  #countdown-label {
+    font-size: 7px;
+    color: #ff6666;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+    animation: pulse 1s infinite;
+  }
+
+  #countdown-number {
+    font-size: 32px;
+    color: #ff4444;
+    text-shadow: 0 0 20px rgba(255, 0, 0, 0.6), 0 0 40px rgba(255, 0, 0, 0.3);
+  }
+
+  #countdown-number.urgent {
+    color: #ff0000;
+    animation: glitch 0.15s infinite;
+    font-size: 40px;
+  }
+
+  /* Explosion overlay */
+  #explosion-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 3000;
+    pointer-events: none;
+  }
+
+  #explosion-overlay.show {
+    display: block;
+    animation: explosionFlash 2s ease-out forwards;
+  }
+
+  @keyframes explosionFlash {
+    0% { background: rgba(255, 255, 255, 1); }
+    10% { background: rgba(255, 200, 50, 0.9); }
+    20% { background: rgba(255, 100, 0, 0.7); }
+    40% { background: rgba(255, 50, 0, 0.4); }
+    70% { background: rgba(0, 0, 0, 0.2); }
+    100% { background: transparent; }
+  }
+
+  /* Post-explosion message */
+  #post-explosion {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #0a0a1a;
+    z-index: 3001;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 24px;
+    font-family: 'Press Start 2P', monospace;
+  }
+
+  #post-explosion.show { display: flex; }
+
+  #post-explosion h2 {
+    color: #ffd700;
+    font-size: 14px;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  }
+
+  #post-explosion p {
+    color: #888;
+    font-size: 8px;
+    text-align: center;
+    line-height: 2.2;
+    max-width: 500px;
+    padding: 0 20px;
+  }
+
+  #post-explosion .signature {
+    color: #ffd700;
+    font-size: 9px;
+    margin-top: 10px;
+  }
+
   /* Mobile */
   @media (max-width: 600px) {
     body { padding: 10px 0; }
@@ -445,6 +539,19 @@
 <div class="stars" id="stars"></div>
 <div id="screen-flash"></div>
 <canvas id="confetti-canvas"></canvas>
+
+<div id="countdown-overlay">
+  <div id="countdown-label">THIS SCROLL WILL SELF-DESTRUCT IN</div>
+  <div id="countdown-number">10</div>
+</div>
+
+<div id="explosion-overlay"></div>
+
+<div id="post-explosion">
+  <h2>SCROLL DESTROYED</h2>
+  <p>The Sacred Scroll has self-destructed.<br><br>But the words remain.<br>You can't un-read a resignation.<br><br>Good luck out there.</p>
+  <p class="signature">- Ryan, formerly of Recovre</p>
+</div>
 
 <div id="game-over">
   <h1>YOU HAVE DIED</h1>
@@ -908,6 +1015,128 @@ function revealLetterParagraphs() {
   paragraphs.forEach((p, i) => {
     setTimeout(() => p.classList.add('visible'), i * 600);
   });
+
+  // After all paragraphs revealed, set up scroll-bottom detection
+  const totalRevealTime = paragraphs.length * 600 + 1000;
+  setTimeout(() => setupScrollDetection(), totalRevealTime);
+}
+
+// ===================== SELF-DESTRUCT =====================
+let selfDestructStarted = false;
+let countdownInterval = null;
+
+function setupScrollDetection() {
+  // Use IntersectionObserver on the last letter paragraph
+  const lastParagraph = document.querySelector('.letter-paragraph:last-child');
+  if (!lastParagraph) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !selfDestructStarted) {
+        selfDestructStarted = true;
+        observer.disconnect();
+        startSelfDestruct();
+      }
+    });
+  }, { threshold: 0.8 });
+
+  observer.observe(lastParagraph);
+}
+
+function playExplosion() {
+  ensureAudio();
+  // Rumble
+  const noise = audioCtx.createBufferSource();
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.5, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.max(0, 1 - i / data.length);
+  noise.buffer = buf;
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+  noise.connect(g); g.connect(audioCtx.destination);
+  noise.start();
+
+  // Boom tone
+  const o = audioCtx.createOscillator();
+  const g2 = audioCtx.createGain();
+  o.connect(g2); g2.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  o.frequency.setValueAtTime(80, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 1);
+  g2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  g2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+  o.start(); o.stop(audioCtx.currentTime + 1);
+}
+
+function playTick() {
+  ensureAudio();
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'square'; o.frequency.value = 1000;
+  g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+  o.start(); o.stop(audioCtx.currentTime + 0.06);
+}
+
+function startSelfDestruct() {
+  const overlay = document.getElementById('countdown-overlay');
+  const numEl = document.getElementById('countdown-number');
+  overlay.classList.add('show');
+
+  let count = 10;
+  numEl.textContent = count;
+  playTick();
+
+  countdownInterval = setInterval(() => {
+    count--;
+    if (count <= 0) {
+      clearInterval(countdownInterval);
+      overlay.classList.remove('show');
+      triggerExplosion();
+      return;
+    }
+    numEl.textContent = count;
+    if (count <= 3) numEl.classList.add('urgent');
+    playTick();
+  }, 1000);
+}
+
+function triggerExplosion() {
+  playExplosion();
+
+  // Fire massive confetti burst
+  const colors = ['#ff4444', '#ff8800', '#ffd700', '#ff6b6b', '#ffaa00', '#ffffff'];
+  for (let i = 0; i < 300; i++) {
+    confettiPieces.push({
+      x: confettiCanvas.width / 2 + (Math.random() - 0.5) * 100,
+      y: confettiCanvas.height / 2,
+      w: Math.random() * 10 + 3,
+      h: Math.random() * 8 + 2,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 20,
+      vy: (Math.random() - 0.5) * 20 - 5,
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 15,
+      opacity: 1
+    });
+  }
+  if (!confettiRunning) { confettiRunning = true; animateConfetti(); }
+
+  // Flash
+  const explosionOverlay = document.getElementById('explosion-overlay');
+  explosionOverlay.classList.add('show');
+
+  // Shake the whole page
+  document.body.style.animation = 'shake 0.1s 6';
+  setTimeout(() => { document.body.style.animation = ''; }, 700);
+
+  // After flash, show post-explosion screen
+  setTimeout(() => {
+    explosionOverlay.classList.remove('show');
+    document.getElementById('game').style.display = 'none';
+    document.getElementById('post-explosion').classList.add('show');
+  }, 2500);
 }
 
 // ===================== HELPER: replace {NAME} =====================
